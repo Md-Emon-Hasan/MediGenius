@@ -1,0 +1,17 @@
+streamlit
+langchain-core
+langchain-community
+langchain-google-genai
+langchain-groq
+langgraph
+python-dotenv
+sentence-transformers
+pypdf
+langchain-chroma
+wikipedia
+duckduckgo-search
+streamlit
+pytest
+torch
+tensorflow
+transformers
