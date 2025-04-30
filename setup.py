@@ -5,7 +5,7 @@ setup(
     version='1.0.0',
     author='Md Emon Hasan',
     author_email='iconicemon01@gmail.com',
-    description='Industry-grade Medical AI Chatbot using LangGraph, RAG, and Wikipedia fallback.',
+    description='Industry-grade Medical AI Assistant using LangGraph, RAG, and Wikipedia fallback.',
     long_description=open('README.md').read(),
     long_description_content_type='text/markdown',
     url='https://github.com/Md-Emon-Hasan/MediGenius',

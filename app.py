@@ -52,7 +52,7 @@ if 'app' not in st.session_state:
     st.session_state.app, st.session_state.state_manager = initialize_system()
 
 # Header
-st.title("🩺 MediGenius: AI Medical Consultation")
+st.title("🩺 MediGenius: AI Medical Assistant")
 st.markdown("Ask your medical questions to our AI doctor.")
 st.markdown("<small>Developed by <b>Md Emon Hasan</b></small>", unsafe_allow_html=True)
 
