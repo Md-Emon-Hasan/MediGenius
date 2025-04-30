@@ -3,6 +3,7 @@ langchain-core
 langchain-community
 langchain-google-genai
 langchain-groq
+langchain_huggingface
 langgraph
 python-dotenv
 sentence-transformers
