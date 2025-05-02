@@ -15,7 +15,7 @@ An industry-grade, compassionate Medical Assistant with conversational memory th
 - 🗂️ **Vector database (ChromaDB)** to persist embeddings
 - 🔁 Session-based memory using Streamlit state
 - 📜 Logging with full traceback (file + console)
-- 🔒 Confidential, local-only execution
+- 🔒 Rest API for integration with other systems
 
 ---
 
@@ -79,6 +79,7 @@ MediGenius/
 ├── Dockerfile                         # Docker build file
 ├── requirements.txt                   # Python dependencies
 ├── app.py                             # Main Streamlit app
+├── FastAPI.py                         # FastAPI app
 ├── main.py                            # Main script
 ├── setup.py                           # Python setup file
 ├── README.md                          # Project Documentation
@@ -123,6 +124,94 @@ streamlit run app.py
 Make sure the following files exist:
 - `data/medical_book.pdf`
 - `docs_db/` (already populated vectorstore)
+
+---
+
+## **API Endpoints**
+
+#### 1. **POST /ask/**
+**Description**: 
+Sends a medical question to the chatbot and receives a response.
+
+- **URL**: `/ask/`
+- **Method**: `POST`
+- **Request Body**:
+    - **Content-Type**: `application/json`
+    - **Body (JSON)**:
+    ```json
+    {
+      "question": "What are the symptoms of diabetes?"
+    }
+    ```
+
+- **Response**:
+    - **Content-Type**: `application/json`
+    - **Body (JSON)**:
+    ```json
+    {
+      "role": "doctor",
+      "content": "Diabetes symptoms include increased thirst, frequent urination, fatigue, and blurred vision."
+    }
+    ```
+
+- **Status Codes**:
+    - `200 OK`: Successfully processed the question and returned a response.
+    - `400 Bad Request`: Invalid or missing parameters in the request.
+    - `500 Internal Server Error`: Unexpected server error.
+
+#### 2. **GET /conversation/**
+**Description**: 
+Fetches the entire conversation history.
+
+- **URL**: `/conversation/`
+- **Method**: `GET`
+- **Response**:
+    - **Content-Type**: `application/json`
+    - **Body (JSON)**:
+    ```json
+    {
+      "conversation": [
+        {
+          "role": "user",
+          "content": "What are the symptoms of diabetes?"
+        },
+        {
+          "role": "doctor",
+          "content": "Diabetes symptoms include increased thirst, frequent urination, fatigue, and blurred vision."
+        }
+      ]
+    }
+    ```
+
+- **Status Codes**:
+    - `200 OK`: Successfully fetched the conversation history.
+    - `500 Internal Server Error`: Unexpected server error.
+
+#### 3. **POST /reset/**
+**Description**: 
+Resets the conversation state.
+
+- **URL**: `/reset/`
+- **Method**: `POST`
+- **Request Body**:
+    - **Content-Type**: `application/json`
+    - **Body**: 
+    ```json
+    {}
+    ```
+
+- **Response**:
+    - **Content-Type**: `application/json`
+    - **Body (JSON)**:
+    ```json
+    {
+      "message": "Conversation reset successfully"
+    }
+    ```
+
+- **Status Codes**:
+    - `200 OK`: Conversation successfully reset.
+    - `500 Internal Server Error`: Unexpected server error.
 
 ---
 
