@@ -1,7 +1,7 @@
 # 🩺 MediGenius: AI Medical Assistant
 Medical Assistant with conversational memory that simulates a human doctor using **LLM + RAG + Wikipedia + DuckDuckGo fallback** pipeline. This system ensures the best possible medical response through reliable fallback strategies.
 
-![Image](https://github.com/user-attachments/assets/18a33126-4bd7-4108-b453-672fdc04d616)
+[![Medical AI Assistant Demo](https://github.com/user-attachments/assets/18a33126-4bd7-4108-b453-672fdc04d616)](https://github.com/user-attachments/assets/18a33126-4bd7-4108-b453-672fdc04d616)
 
 ## 🎯 Objective
 The goal of this project is to design and deploy an **end-to-end AI-powered Medical Assistant** that can engage in **empathetic, intelligent, and privacy-conscious** doctor-patient-style conversations.
