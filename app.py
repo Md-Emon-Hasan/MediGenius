@@ -53,8 +53,14 @@ if 'app' not in st.session_state:
 
 # Header
 st.title("🩺 MediGenius: AI Medical Assistant")
-st.markdown("Ask your medical questions to our AI doctor.")
+# st.markdown("Ask your medical questions to our AI doctor.")
 st.markdown("<small>Developed by <b>Md Emon Hasan</b></small>", unsafe_allow_html=True)
+st.markdown(
+    """
+    - [![LinkedIn](https://img.shields.io/badge/LinkedIn-blue?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/md-emon-hasan-695483237/)
+    - [![WhatsApp](https://img.shields.io/badge/WhatsApp-25D366?style=for-the-badge&logo=whatsapp&logoColor=white)](https://wa.me/8801834363533)
+    """
+)
 
 # Reset
 if st.button("🔁 Reset Conversation"):

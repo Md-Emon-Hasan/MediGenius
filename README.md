@@ -1,7 +1,40 @@
 # 🩺 MediGenius: AI Medical Assistant
-An industry-grade, compassionate Medical Assistant with conversational memory that simulates a human doctor using **LLM + RAG + Wikipedia + DuckDuckGo fallback** pipeline. This system ensures the best possible medical response through reliable fallback strategies.
+Medical Assistant with conversational memory that simulates a human doctor using **LLM + RAG + Wikipedia + DuckDuckGo fallback** pipeline. This system ensures the best possible medical response through reliable fallback strategies.
 
-![Image](https://github.com/user-attachments/assets/1a88ac50-d53d-4820-a5d3-c187f704161a)
+![Image](https://github.com/user-attachments/assets/18a33126-4bd7-4108-b453-672fdc04d616)
+
+## 🎯 Objective
+The goal of this project is to design and deploy an **end-to-end AI-powered Medical Assistant** that can engage in **empathetic, intelligent, and privacy-conscious** doctor-patient-style conversations.
+
+This assistant is powered by **LLaMA-3** and uses **LangGraph** for agentic reasoning and orchestration. It combines **RAG (Retrieval-Augmented Generation)** techniques to retrieve accurate and up-to-date medical information from multiple trusted sources, such as **ingested medical PDFs**, **Wikipedia**, and **real-time DuckDuckGo search results**.
+
+The system maintains **short-term conversation memory** to understand context across multiple user queries and responds in a **human-like**, emotionally supportive tone. It avoids over-reliance on citations or cold, fact-dumping responses — instead, it prioritizes **clarity, compassion, and usefulness**, mimicking the experience of consulting a real doctor.
+
+---
+
+## 🔗 **Live Demo**
+
+You can interact with the live AI-powered medical assistant here:
+👉 [https://medigenius.onrender.com/](https://medigenius.onrender.com/)
+
+---
+
+## 🌍 Real-World Use Cases
+
+1. **Rural Health Access**
+   Providing preliminary medical advice in rural or underserved areas where certified doctors may not be immediately available.
+
+2. **Mental Health First Aid**
+   Offering supportive conversations for users dealing with stress, anxiety, or medical confusion.
+
+3. **Patient Pre-screening**
+   Collecting and analyzing symptoms before a user visits a doctor, reducing clinical workload.
+
+4. **Home Care Guidance**
+   Guiding patients and caregivers on medication usage, symptoms, or recovery advice.
+
+5. **Educational Assistant**
+   Helping medical students or patients understand medical topics in simpler language.
 
 ---
 
@@ -19,21 +52,20 @@ An industry-grade, compassionate Medical Assistant with conversational memory th
 
 ---
 
-## 🧱 Project Architecture
+## 🗂️ Technical Stack
 
-```
-User Query
-   ↓
-[Step 1] LLM → Tries to answer with context only
-   ↓
-[Step 2] RAG (ChromaDB) → If LLM not confident
-   ↓
-[Step 3] Wikipedia API → If no relevant vector match
-   ↓
-[Step 4] DuckDuckGo Search → If Wikipedia has no relevant answer
-   ↓
-Final Answer → LLM generates doctor-like response
-```
+| **Category**               | **Technology/Resource**                                                                 |
+|----------------------------|----------------------------------------------------------------------------------------|
+| **Core Framework**         | LangChain, LangGraph                                                                   |
+| **LLM Provider**           | Groq (Llama-3-70b)                                                                     |
+| **Embeddings Model**       | HuggingFace (sentence-transformers/all-MiniLM-L6-v2)                                   |
+| **Vector Database**        | ChromaDB (with cosine similarity)                                                      |
+| **Document Processing**    | PyPDFLoader (PDF), RecursiveCharacterTextSplitter                                      |
+| **Search Tools**           | Wikipedia API, DuckDuckGo Search                                                       |
+| **Conversation Flow**      | State Machine (LangGraph) with 4-stage fallback                                        |
+| **Medical Knowledge Base** | Custom PDF documents + Wikipedia medical content                                       |
+| **Environment**            | python-dotenv (environment variables)                                                  |
+| **Hosting**                | Local (development), Streamlit Cloud (deployment)                                      |
 
 ---
 
@@ -85,45 +117,26 @@ MediGenius/
 ├── README.md                          # Project Documentation
 ├── .gitignore                         
 ├── app.png                            # Demo
+├── demo.webm                          # Video Demo
 └── LICENSE                            # License
 ```
 
 ---
 
-## 🧠 Module Responsibilities
+## 🧱 Project Architecture
 
-| Module                  | Responsibility |
-|------------------------|----------------|
-| `llm_models.py`        | Loads LLM (e.g., LLaMA-3), manages embeddings |
-| `document_processing.py` | Loads/splits PDF, prepares docs for RAG |
-| `retrieval_tools.py`   | Builds & queries vector DB (ChromaDB) |
-| `state_management.py` | Stores & updates session states |
-| `workflow.py`          | Executes the 4-level fallback pipeline |
-| `helpers.py`           | Handles Wikipedia + DuckDuckGo API logic |
-
----
-
-## ⚙️ How to Run Locally
-
-1. **Clone the repo**
-```bash
-git clone https://github.com/Md-Emon-Hasan/MediGenius.git
-cd medical-ai-assistant
+```mermaid
+graph TD
+    A[User Question] --> B{LLM Knowledge}
+    B -->|Success| C[Generate Response]
+    B -->|Fail| D[PDF RAG Search]
+    D -->|Success| C
+    D -->|Fail| E[Wikipedia Search]
+    E -->|Success| C
+    E -->|Fail| F[DuckDuckGo Search]
+    F --> C
+    C --> G[Output Response]
 ```
-
-2. **Install dependencies**
-```bash
-pip install -r requirements.txt
-```
-
-3. **Run the app**
-```bash
-streamlit run app.py
-```
-
-Make sure the following files exist:
-- `data/medical_book.pdf`
-- `docs_db/` (already populated vectorstore)
 
 ---
 
@@ -215,16 +228,6 @@ Resets the conversation state.
 
 ---
 
-## 👨‍💻 Architecture Diagram
-```mermaid
-graph TD
-    A[User Input] --> B(LLM First-Pass)
-    B -->|Less Confidence| C[RAG: PDF VectorDB]
-    C -->|No Match| D[Wikipedia API]
-    D -->|Fallback| E[DuckDuckGo]
-    E --> F[Response Generation]
-```
-
 ## 🔍 Fallback Flow (Detailed)
 
 ```text
@@ -275,7 +278,7 @@ The system will:
 📧 **Email:** iconicemon01@gmail.com  
 💬 **WhatsApp:** [+8801834363533](https://wa.me/8801834363533)  
 🔗 **GitHub:** [Md-Emon-Hasan](https://github.com/Md-Emon-Hasan)  
-🔗 **LinkedIn:** [Md Emon Hasan](https://www.linkedin.com/in/md-emon-hasan)  
+🔗 **LinkedIn:** [Md Emon Hasan](https://www.linkedin.com/in/md-emon-hasan-695483237/)  
 🔗 **Facebook:** [Md Emon Hasan](https://www.facebook.com/mdemon.hasan2001/)
 
 ---
