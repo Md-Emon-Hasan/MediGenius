@@ -1,0 +1,140 @@
+<!-- templates/index.html -->
+{% extends "base.html" %}
+
+{% block content %}
+<div class="app-container">
+    <!-- Updated Sidebar with Developer Info -->
+    <div class="sidebar animate__animated animate__fadeInLeft">
+        <div class="sidebar-header">
+            <div class="logo-3d">
+                <i class="fas fa-brain"></i>
+            </div>
+            <h2>MediGenius</h2>
+            <p>Version 2.0</p>
+        </div>
+        
+        <div class="developer-info" style="color:black">
+            <div class="info-section">
+                <h3><i class="fas fa-user"></i> Developer</h3>
+                <p>Md. Emon Hasan</p>
+            </div>
+            
+            <div class="info-section">
+                <h3><i class="fas fa-address-book"></i> Contact</h3>
+                <ul>
+                    <li><i class="fab fa-whatsapp"></i> <a href="https://wa.me/8801834363533" target="_blank">WhatsApp</a></li>
+                    <li><i class="fab fa-github"></i> <a href="https://github.com/Md-Emon-Hasan" target="_blank">GitHub</a></li>
+                    <li><i class="fab fa-linkedin"></i> <a href="https://www.linkedin.com/in/md-emon-hasan-695483237/" target="_blank">LinkedIn</a></li>
+                </ul>
+            </div>
+            
+            <div class="info-section">
+                <h3><i class="fas fa-map-marker-alt"></i> Address</h3>
+                <p>Dhaka, Bangladesh</p>
+            </div>
+        </div>
+
+        <div class="user-profile">
+            <div class="profile-avatar">
+                <i class="fas fa-user-md"></i>
+            </div>
+            <div class="profile-info">
+                <span class="username">Dr. Assistant</span>
+                <span class="status">Online</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Main Chat Area -->
+    <div class="main-content">
+        <!-- Animated Header -->
+        <div class="app-header">
+            <div class="header-content">
+                <h1 class="animate-charcter">MEDICAL AI ASSISTANT</h1>
+                <div class="status-indicator">
+                    <span class="pulse-dot"></span>
+                    <span>AI is analyzing</span>
+                </div>
+            </div>
+            <div class="header-actions">
+                <button class="btn-icon" id="theme-toggle">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Chat Messages with Parallax Background -->
+        <div class="chat-container" id="chat-container">
+            <div class="parallax-bg"></div>
+            
+            <div class="welcome-screen" id="welcome-screen">
+                <div class="welcome-content">
+                    <div class="animated-logo">
+                        <svg class="pulse" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M50 15L60 40H90L65 60L75 85L50 70L25 85L35 60L10 40H40L50 15Z" fill="#4a6fa5"/>
+                        </svg>
+                    </div>
+                    <h2>How can I help you today?</h2>
+                    <p>Ask me anything about symptoms, treatments, or general health advice</p>
+                    
+                    <div class="quick-questions">
+                        <button class="quick-btn" data-question="What are COVID-19 symptoms?">
+                            <i class="fas fa-virus"></i> COVID Symptoms
+                        </button>
+                        <button class="quick-btn" data-question="How to treat a migraine?">
+                            <i class="fas fa-head-side-virus"></i> Migraine Relief
+                        </button>
+                        <button class="quick-btn" data-question="Best diet for diabetes?">
+                            <i class="fas fa-apple-alt"></i> Diabetes Diet
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="chat-messages" id="chat-messages"></div>
+        </div>
+        
+        <!-- Advanced Input Area -->
+        <div class="input-container">
+            <div class="input-box">
+                <button class="btn-icon" id="attach-btn">
+                    <i class="fas fa-paperclip"></i>
+                </button>
+                <div class="text-input" id="text-input" contenteditable="true" placeholder="Type your health question..."></div>
+                <button class="btn-icon" id="voice-btn">
+                    <i class="fas fa-microphone"></i>
+                </button>
+                <button class="btn-send" id="send-btn">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+            <div class="input-footer">
+                <span class="disclaimer">AI may produce inaccurate information. Consult a doctor.</span>
+                <div class="typing-indicator" id="typing-indicator">
+                    <span>Dr. Assistant is typing</span>
+                    <div class="dots">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Notification Toast -->
+    <div class="toast-notification" id="toast">
+        <div class="toast-content">
+            <i class="fas fa-check-circle"></i>
+            <span>Message sent</span>
+        </div>
+    </div>
+</div>
+
+<!-- Animated Background Elements -->
+<div class="floating-elements">
+    <div class="floating-circle circle-1"></div>
+    <div class="floating-circle circle-2"></div>
+    <div class="floating-circle circle-3"></div>
+</div>
+{% endblock %}

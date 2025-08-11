@@ -12,10 +12,9 @@ setup(
     # packages=find_packages(exclude=['tests', '*.tests', '*.tests.*', 'tests.*']),
     include_package_data=True,
     install_requires=[
-        'streamlit',
+        'huggingface-hub',
         'langchain-core',
         'langchain-community',
-        'langchain-google-genai',
         'langchain_huggingface',
         'langchain-groq',
         'langgraph',
@@ -28,7 +27,13 @@ setup(
         'langchain-chroma',
         'transformers',
         'wikipedia',
-        'duckduckgo-search'
+        'duckduckgo-search',
+        'chromadb',
+        'python-jose',
+        'passlib',
+        'gunicorn',
+        'flask',
+        'pytest'
     ],
     python_requires='>=3.9',
     classifiers=[

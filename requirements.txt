@@ -1,7 +1,13 @@
-streamlit
+# Core Requirements
+fastapi
+uvicorn
+python-multipart
+pydantic
+
+# AI/ML Dependencies
+huggingface-hub
 langchain-core
 langchain-community
-langchain-google-genai
 langchain-groq
 langchain_huggingface
 langgraph
@@ -11,7 +17,16 @@ pypdf
 langchain-chroma
 wikipedia
 duckduckgo-search
-pytest
 torch
 tensorflow
 transformers
+
+# Vector Database
+chromadb
+
+# Optional (for production)
+python-jose
+passlib
+gunicorn
+flask
+pytest

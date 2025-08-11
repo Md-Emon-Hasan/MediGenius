@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: medi-genius
+    env: python
+    buildCommand: ""
+    startCommand: gunicorn app:app -b 0.0.0.0:$PORT
+    plan: free
