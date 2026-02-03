@@ -1,4 +1,4 @@
-# 🩺 **MediGenius: AI-Powered Multi-Agent Medical Assistant**
+# **MediGenius: AI-Powered Multi-Agent Medical Assistant**
 
 **MediGenius** is a **production-ready, multi-agent medical AI system** built with **LangGraph orchestration**, achieving **90%+ factual accuracy**, **82% medical alignment**, and **<7.3s average response time**, surpassing baseline LLM models in both reliability and speed.
 
@@ -11,14 +11,14 @@ It features **SQLite-powered long-term memory** for persistent medical conversat
 
 ---
 
-## 🔗 **Live Demo**
+## **Live Demo**
 
 You can interact with the live AI-powered medical assistant here:
-👉 [https://medigenius.onrender.com/](https://medigenius.onrender.com/)
+-> [https://medigenius.onrender.com/](https://medigenius.onrender.com/)
 
 ---
 
-## 📊 **Performance Evaluation & Benchmarking**
+## **Performance Evaluation & Benchmarking**
 
 | **Metrics**               | **MediGenius (Your Model)** | **LLaMA 3.1 70B**                                                                                                                                |
 | ------------------------- | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -33,7 +33,7 @@ You can interact with the live AI-powered medical assistant here:
 
 ---
 
-## 🌍 **Real-World Use Cases**
+## **Real-World Use Cases**
 
 1. **Rural Health Access**
    Providing preliminary medical advice in rural or underserved areas where certified doctors may not be immediately available.
@@ -52,28 +52,28 @@ You can interact with the live AI-powered medical assistant here:
 
 ---
 
-## 🚀 **Features**
+## **Features**
 
-* 🤖 **Doctor-like medical assistant** with empathetic, patient-friendly communication
-* 🧠 **LLM-powered primary response** engine using ChatGroq (GPT-OSS-120B)
-* 📚 **RAG (Retrieval-Augmented Generation)** from indexed medical PDFs using PyPDFLoader + HuggingFace Embeddings + ChromaDB
-* 🗺️ **Planner Agent** for intelligent tool selection and decision-making
-* 🌐 **Wikipedia fallback** for general medical knowledge retrieval
-* 🔎 **DuckDuckGo fallback** for up-to-date or rare medical information
-* 🗂️ **Vector database (ChromaDB)** with persistent cosine-similarity search
-* 🧩 **Multi-agent orchestration** via LangGraph with Planner, Retriever, Executor, and Explanation agents
-* 💬 **(SQLite)Long Term Memory** for context-aware responses
-* 🔄 **Dynamic fallback chain** ensuring robust answers even in edge cases
-* 📜 **Conversation logging** for traceability and debugging
-* ⚡ **Production-ready modular design** for integration into healthcare chat systems
-* 🔒 **Rest API** for integration with other systems
-* 🐳 **Dockerized deployment** for consistent environment and easy scaling
-* 🌐 **Flask backend** with **custom HTML, CSS, and JavaScript** frontend for smooth UX
-* 🔁 **CI/CD pipeline integration** for automated testing and deployment
+* **Doctor-like medical assistant** with empathetic, patient-friendly communication
+* **LLM-powered primary response** engine using ChatGroq (GPT-OSS-120B)
+* **RAG (Retrieval-Augmented Generation)** from indexed medical PDFs using PyPDFLoader + HuggingFace Embeddings + ChromaDB
+* **Planner Agent** for intelligent tool selection and decision-making
+* **Wikipedia fallback** for general medical knowledge retrieval
+* **DuckDuckGo fallback** for up-to-date or rare medical information
+* **Vector database (ChromaDB)** with persistent cosine-similarity search
+* **Multi-agent orchestration** via LangGraph with Planner, Retriever, Executor, and Explanation agents
+* **(SQLite)Long Term Memory** for context-aware responses
+* **Dynamic fallback chain** ensuring robust answers even in edge cases
+* **Conversation logging** for traceability and debugging
+* **Production-ready modular design** for integration into healthcare chat systems
+* **Rest API** for integration with other systems
+* **Dockerized deployment** for consistent environment and easy scaling
+* **Flask backend** with **custom HTML, CSS, and JavaScript** frontend for smooth UX
+* **CI/CD pipeline integration** for automated testing and deployment
 
 ---
 
-## 🗂️ **Technical Stack**
+## **Technical Stack**
 
 | **Category**               | **Technology/Resource**                                                                                   |
 |----------------------------|----------------------------------------------------------------------------------------------------------|
@@ -96,7 +96,7 @@ You can interact with the live AI-powered medical assistant here:
 
 ---
 
-## 🗂️ **Folder Structure**
+## **Folder Structure**
 
 ```
 MediGenius/
@@ -171,7 +171,7 @@ MediGenius/
 
 ---
 
-## 🧱 **Project Architecture**
+## **Project Architecture**
 
 ```mermaid
 graph TD
@@ -273,25 +273,25 @@ Response:
 
 ---
 
-## 🧭 **Future Improvements**
+## **Future Improvements**
 
-- 🎙️ Add voice input/output
-- 🖼️ Add image upload for reports or prescriptions
-- 🧬 Integrate with real-time medical APIs (e.g., WebMD)
-- 🔐 Add user authentication & role-based chat memory
+- Add voice input/output
+- Add image upload for reports or prescriptions
+- Add integration with real-time medical APIs (e.g., WebMD)
+- Add user authentication & role-based chat memory
 
 ---
 
-## 👨‍💻 **Developed By**
+## **Developed By**
 
 **Md Emon Hasan**  
-📧 **Email:** iconicemon01@gmail.com  
-💬 **WhatsApp:** [+8801834363533](https://wa.me/8801834363533)  
-🔗 **GitHub:** [Md-Emon-Hasan](https://github.com/Md-Emon-Hasan)  
-🔗 **LinkedIn:** [Md Emon Hasan](https://www.linkedin.com/in/md-emon-hasan-695483237/)  
-🔗 **Facebook:** [Md Emon Hasan](https://www.facebook.com/mdemon.hasan2001/)
+**Email:** emon.mlengineer@gmail.com 
+**WhatsApp:** [+8801834363533](https://wa.me/8801834363533)  
+**GitHub:** [Md-Emon-Hasan](https://github.com/Md-Emon-Hasan)  
+**LinkedIn:** [Md Emon Hasan](https://www.linkedin.com/in/md-emon-hasan-695483237/)  
+**Facebook:** [Md Emon Hasan](https://www.facebook.com/mdemon.hasan2001/)
 
 ---
 
-## 📌 License
+## License
 MIT License. Free to use with credit.
