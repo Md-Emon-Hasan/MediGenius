@@ -1,0 +1,75 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  backend-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./backend
+
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v3
+      with:
+        python-version: "3.10"
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+        pip install pytest httpx coverage
+    
+    - name: Run Code Quality Checks
+      run: |
+        flake8 app tests
+        isort --check-only app tests
+        
+    - name: Run Backend Tests
+      run: |
+        export PYTHONPATH=$PYTHONPATH:$(pwd)/app
+        pytest --cov=app --cov-report=term-missing tests/
+
+  frontend-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./frontend
+
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        
+    - name: Install Dependencies
+      run: npm install
+    
+    - name: Run Frontend Tests
+      run: npx vitest run
+      
+    - name: Build Frontend
+      run: npm run build
+
+  docker-build:
+    needs: [backend-test, frontend-test]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Build Backend Docker Image
+      run: docker build ./backend -t medigenius-backend:latest
+      
+    - name: Build Frontend Docker Image
+      run: docker build ./frontend -t medigenius-frontend:latest

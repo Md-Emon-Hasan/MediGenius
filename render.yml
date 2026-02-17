@@ -1,0 +1,33 @@
+services:
+  # Backend API service
+  - type: web
+    name: medigenius-api
+    runtime: docker
+    dockerContext: ./backend
+    dockerfile: Dockerfile
+    plan: free
+    envVars:
+      - key: GROQ_API_KEY
+        sync: false
+      - key: TAVILY_API_KEY
+        sync: false
+      - key: PDF_PATH
+        value: data/medical_book.pdf
+      - key: PYTHONPATH
+        value: /app
+
+  # Frontend static service
+  - type: static
+    name: medigenius-web
+    runtime: node
+    buildCommand: npm install && npm run build
+    publishPath: ./dist
+    staticPublishPath: ./dist
+    buildCommand: cd frontend && npm install && npm run build
+    publishPath: ./frontend/dist
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          name: medigenius-api
+          type: web
+          property: host

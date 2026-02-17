@@ -86,12 +86,12 @@ You can interact with the live AI-powered medical assistant here:
 | **Search Tools**           | Wikipedia API, DuckDuckGo Search                                                                          |
 | **Conversation Flow**      | State Machine (LangGraph) with multi-stage fallback logic                                                |
 | **Medical Knowledge Base** | Domain-specific medical PDFs + Wikipedia medical content                                                 |
-| **Backend**                | Flask (REST API + application logic)                                                                     |
-| **Frontend**               | Custom HTML, CSS, JavaScript UI                                                                           |
+| **Backend**                | FastAPI (REST API + application logic)                                                                   |
+| **Frontend**               | React + Tailwind CSS + DaisyUI                                                                           |
 | **Deployment**             | Docker (containerized), Local Development, Production-ready build                                        |
 | **CI/CD**                  | GitHub Actions (automated testing & deployment)                                                          |
 | **Environment Management** | python-dotenv (environment variables)                                                                    |
-| **Logging & Monitoring**   | Console + file logging with full traceback                                                               |
+| **Logging**                | Structured logging in `backend/logs`                                                                     |
 | **Hosting**                | Render                                                                                                   |
 
 ---
@@ -102,72 +102,85 @@ You can interact with the live AI-powered medical assistant here:
 MediGenius/
 ├── .github/
 │   └── workflows/
-│       └── main.yml
-│
-├── agents/
-│   ├── __init__.py
-│   ├── duckduckgo_agent.py
-│   ├── executor_agent.py
-│   ├── explanation_agent.py
-│   ├── llm_agent.py
-│   ├── memory_agent.py
-│   ├── planner_agent.py
-│   ├── retriever_agent.py
-│   └── wikipedia_agent.py
-│
-├── biogpt-merged/         # Fine Tuning Model
-│ 
-├── core/
-│   ├── __init__.py
-│   ├── langgraph_workflow.py
-│   └── state.py
-│
-├── data/
-│   └── medical_book.pdf
-│
-├──── medical_db/
-│   └── chroma.sqlite3
-│
-├──── chat_db/
-│   └── medigenius_chats.db
-│
-├── notebook/
-│   ├── Experiments.ipynb
-│   ├── Fine Tuning LLM.ipynb
-│   └── Model Train.ipynb
-│
-├── static/
-│   ├── css/
-│   │   └── style.css
-│   └── js/
-│       └── main.js
-│
-├── templates/
-│   └── index.html
-│
-├── tests/
-│   └── test_app.py
-│
-├── tools/
-│   ├── __init__.py
-│   ├── llm_client.py
-│   ├── pdf_loader.py
-│   └── vector_store.py
-│
-├── .gitignore
-├── api.py
-├── app.png
-├── app.py
-├── demo.mp4
-├── Dockerfile
-├── Fine Tuning LLM.py
-├── LICENSE
-├── main.py
+│       └── ci-cd.yml
+├── backend/
+│   ├── app/
+│   │   ├── agents/
+│   │   ├── core/
+│   │   ├── static/
+│   │   │   └── css/style.css
+│   │   ├── tools/
+│   │   ├── __init__.py
+│   │   ├── database.py
+│   │   └── main.py
+│   ├── chat_db/
+│   ├── data/
+│   ├── logs/
+│   ├── medical_db/
+│   ├── tests/
+│   │   ├── test_api.py
+│   │   └── test_app.py
+│   ├── Dockerfile
+│   ├── pyproject.toml
+│   └── requirements.txt
+├── frontend/
+│   ├── public/
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── ChatArea.jsx
+│   │   │   ├── InputArea.jsx
+│   │   │   └── Sidebar.jsx
+│   │   ├── App.jsx
+│   │   ├── index.css
+│   │   └── main.jsx
+│   ├── Dockerfile
+│   ├── nginx.conf
+│   ├── package.json
+│   ├── tailwind.config.js
+│   └── vite.config.js
+├── docker-compose.yml
+├── run.py
 ├── README.md
-├── render.yaml
-├── requirements.txt
-└── setup.py
+└── LICENSE
 ```
+
+## **Running the Project**
+
+### **Option 1: Python Script (Local Dev)**
+Run the monolithic application (Backend + Frontend) with a single command:
+```bash
+python run.py
+```
+This starts:
+- Backend API at `http://localhost:8000`
+- Frontend UI at `http://localhost:5173`
+
+### **Option 2: Docker (Production-Ready)**
+Run the entire stack using Docker Compose:
+```bash
+docker-compose up --build
+```
+This starts:
+- Frontend (Nginx) at `http://localhost:80`
+- Backend (FastAPI) at `http://localhost:8000`
+
+## **Testing & CI/CD**
+
+### **Testing**
+The project aims for **100% testing coverage**.
+Run backend tests:
+```bash
+cd backend
+pytest tests/
+```
+
+### **CI/CD Pipeline**
+The project uses **GitHub Actions** for:
+- Automated Backend Testing
+- Frontend Build Verification
+- Docker Image Building
+
+The workflow is defined in `.github/workflows/ci-cd.yml`.
 
 ---
 

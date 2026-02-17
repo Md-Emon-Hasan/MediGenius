@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<coverage generated="1771329053327" clover="3.2.0">
+  <project timestamp="1771329053327" name="All files">
+    <metrics statements="102" coveredstatements="68" conditionals="64" coveredconditionals="40" methods="30" coveredmethods="20" elements="196" coveredelements="128" complexity="0" loc="102" ncloc="102" packages="2" files="4" classes="4"/>
+    <package name="src">
+      <metrics statements="72" coveredstatements="45" conditionals="28" coveredconditionals="13" methods="16" coveredmethods="10"/>
+      <file name="App.jsx" path="C:\Users\codix\OneDrive\Desktop\my project\MediGenius\frontend\src\App.jsx">
+        <metrics statements="72" coveredstatements="45" conditionals="28" coveredconditionals="13" methods="16" coveredmethods="10"/>
+        <line num="7" count="8" type="stmt"/>
+        <line num="8" count="8" type="stmt"/>
+        <line num="9" count="8" type="stmt"/>
+        <line num="10" count="8" type="stmt"/>
+        <line num="11" count="8" type="stmt"/>
+        <line num="12" count="8" type="stmt"/>
+        <line num="15" count="8" type="stmt"/>
+        <line num="16" count="4" type="stmt"/>
+        <line num="18" count="4" type="stmt"/>
+        <line num="19" count="4" type="stmt"/>
+        <line num="21" count="4" type="cond" truecount="4" falsecount="0"/>
+        <line num="22" count="1" type="stmt"/>
+        <line num="25" count="0" type="stmt"/>
+        <line num="28" count="8" type="stmt"/>
+        <line num="29" count="6" type="stmt"/>
+        <line num="30" count="6" type="stmt"/>
+        <line num="31" count="6" type="stmt"/>
+        <line num="32" count="6" type="cond" truecount="1" falsecount="1"/>
+        <line num="33" count="6" type="stmt"/>
+        <line num="36" count="0" type="stmt"/>
+        <line num="40" count="8" type="stmt"/>
+        <line num="41" count="1" type="stmt"/>
+        <line num="42" count="1" type="stmt"/>
+        <line num="45" count="8" type="stmt"/>
+        <line num="47" count="1" type="stmt"/>
+        <line num="48" count="1" type="stmt"/>
+        <line num="49" count="1" type="stmt"/>
+        <line num="51" count="1" type="stmt"/>
+        <line num="52" count="1" type="stmt"/>
+        <line num="57" count="1" type="stmt"/>
+        <line num="59" count="1" type="cond" truecount="1" falsecount="1"/>
+        <line num="60" count="1" type="stmt"/>
+        <line num="66" count="1" type="stmt"/>
+        <line num="67" count="1" type="stmt"/>
+        <line num="69" count="0" type="stmt"/>
+        <line num="72" count="0" type="stmt"/>
+        <line num="73" count="0" type="stmt"/>
+        <line num="75" count="1" type="stmt"/>
+        <line num="79" count="8" type="stmt"/>
+        <line num="80" count="1" type="stmt"/>
+        <line num="81" count="1" type="stmt"/>
+        <line num="82" count="1" type="stmt"/>
+        <line num="83" count="1" type="cond" truecount="1" falsecount="1"/>
+        <line num="84" count="1" type="stmt"/>
+        <line num="85" count="1" type="stmt"/>
+        <line num="86" count="1" type="stmt"/>
+        <line num="87" count="1" type="stmt"/>
+        <line num="90" count="0" type="stmt"/>
+        <line num="94" count="8" type="stmt"/>
+        <line num="95" count="0" type="stmt"/>
+        <line num="96" count="0" type="stmt"/>
+        <line num="97" count="0" type="stmt"/>
+        <line num="98" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="99" count="0" type="stmt"/>
+        <line num="100" count="0" type="stmt"/>
+        <line num="102" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="105" count="0" type="stmt"/>
+        <line num="109" count="8" type="stmt"/>
+        <line num="110" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="112" count="0" type="stmt"/>
+        <line num="113" count="0" type="stmt"/>
+        <line num="114" count="0" type="stmt"/>
+        <line num="115" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="116" count="0" type="stmt"/>
+        <line num="117" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="118" count="0" type="stmt"/>
+        <line num="119" count="0" type="stmt"/>
+        <line num="121" count="0" type="stmt"/>
+        <line num="124" count="0" type="stmt"/>
+        <line num="128" count="8" type="stmt"/>
+        <line num="142" count="0" type="stmt"/>
+        <line num="164" count="0" type="stmt"/>
+      </file>
+    </package>
+    <package name="src.components">
+      <metrics statements="30" coveredstatements="23" conditionals="36" coveredconditionals="27" methods="14" coveredmethods="10"/>
+      <file name="ChatArea.jsx" path="C:\Users\codix\OneDrive\Desktop\my project\MediGenius\frontend\src\components\ChatArea.jsx">
+        <metrics statements="12" coveredstatements="11" conditionals="16" coveredconditionals="15" methods="6" coveredmethods="5"/>
+        <line num="4" count="2" type="stmt"/>
+        <line num="5" count="11" type="stmt"/>
+        <line num="7" count="11" type="stmt"/>
+        <line num="8" count="10" type="stmt"/>
+        <line num="11" count="11" type="stmt"/>
+        <line num="12" count="10" type="stmt"/>
+        <line num="15" count="11" type="cond" truecount="2" falsecount="0"/>
+        <line num="16" count="8" type="stmt"/>
+        <line num="38" count="48" type="stmt"/>
+        <line num="41" count="0" type="stmt"/>
+        <line num="74" count="3" type="stmt"/>
+        <line num="78" count="5" type="cond" truecount="2" falsecount="0"/>
+      </file>
+      <file name="InputArea.jsx" path="C:\Users\codix\OneDrive\Desktop\my project\MediGenius\frontend\src\components\InputArea.jsx">
+        <metrics statements="12" coveredstatements="9" conditionals="10" coveredconditionals="5" methods="4" coveredmethods="3"/>
+        <line num="3" count="2" type="stmt"/>
+        <line num="4" count="13" type="stmt"/>
+        <line num="6" count="13" type="stmt"/>
+        <line num="7" count="2" type="cond" truecount="3" falsecount="1"/>
+        <line num="8" count="2" type="stmt"/>
+        <line num="9" count="2" type="stmt"/>
+        <line num="13" count="13" type="stmt"/>
+        <line num="14" count="0" type="cond" truecount="0" falsecount="4"/>
+        <line num="15" count="0" type="stmt"/>
+        <line num="16" count="0" type="stmt"/>
+        <line num="20" count="13" type="stmt"/>
+        <line num="29" count="2" type="stmt"/>
+      </file>
+      <file name="Sidebar.jsx" path="C:\Users\codix\OneDrive\Desktop\my project\MediGenius\frontend\src\components\Sidebar.jsx">
+        <metrics statements="6" coveredstatements="3" conditionals="10" coveredconditionals="7" methods="4" coveredmethods="2"/>
+        <line num="3" count="2" type="stmt"/>
+        <line num="4" count="10" type="stmt"/>
+        <line num="49" count="3" type="stmt"/>
+        <line num="52" count="0" type="stmt"/>
+        <line num="61" count="0" type="stmt"/>
+        <line num="62" count="0" type="stmt"/>
+      </file>
+    </package>
+  </project>
+</coverage>

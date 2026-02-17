@@ -1,0 +1,38 @@
+app\agents\executor_agent.py:76:141: E501 line too long (189 > 140 characters)
+app\core\logging_config.py:10:1: W293 blank line contains whitespace
+app\core\logging_config.py:14:1: W293 blank line contains whitespace
+app\core\logging_config.py:18:1: W293 blank line contains whitespace
+app\core\logging_config.py:22:1: W293 blank line contains whitespace
+app\core\logging_config.py:31:1: W293 blank line contains whitespace
+app\core\logging_config.py:35:1: W293 blank line contains whitespace
+app\core\logging_config.py:43:1: W293 blank line contains whitespace
+app\core\logging_config.py:47:1: W293 blank line contains whitespace
+app\main.py:22:1: E402 module level import not at top of file
+app\main.py:23:1: E402 module level import not at top of file
+app\main.py:24:1: E402 module level import not at top of file
+app\main.py:25:1: E402 module level import not at top of file
+app\main.py:43:9: F841 local variable 'vectorstore' is assigned to but never used
+app\main.py:81:1: E402 module level import not at top of file
+app\services\chat_service.py:34:1: W293 blank line contains whitespace
+app\services\database_service.py:53:22: F541 f-string is missing placeholders
+app\services\database_service.py:62:1: W293 blank line contains whitespace
+app\services\database_service.py:85:1: W293 blank line contains whitespace
+app\services\database_service.py:87:1: W293 blank line contains whitespace
+app\services\database_service.py:95:1: W293 blank line contains whitespace
+app\services\database_service.py:105:21: F541 f-string is missing placeholders
+tests\conftest.py:28:80: F841 local variable 'mock_workflow_init' is assigned to but never used
+tests\test_agents.py:5:1: F401 'pytest' imported but unused
+tests\test_api.py:1:1: F401 'os' imported but unused
+tests\test_api.py:2:1: F401 'sys' imported but unused
+tests\test_api.py:3:1: F401 'unittest.mock.MagicMock' imported but unused
+tests\test_api.py:5:1: F401 'fastapi.testclient.TestClient' imported but unused
+tests\test_api_edge_cases.py:6:1: F401 'pytest' imported but unused
+tests\test_database.py:3:1: F401 'sqlite3' imported but unused
+tests\test_logging.py:6:1: F401 'pytest' imported but unused
+tests\test_tools.py:5:1: F401 'pytest' imported but unused
+tests\test_tools.py:9:1: F401 'tools.vector_store.get_or_create_vectorstore' imported but unused
+tests\test_tools.py:9:1: F401 'tools.vector_store.get_retriever' imported but unused
+tests\test_workflow.py:3:1: F401 'unittest.mock.MagicMock' imported but unused
+tests\test_workflow.py:3:1: F401 'unittest.mock.patch' imported but unused
+tests\test_workflow.py:5:1: F401 'pytest' imported but unused
+tests\test_workflow.py:6:1: F401 'core.langgraph_workflow.route_after_tavily' imported but unused
