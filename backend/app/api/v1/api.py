@@ -1,9 +1,14 @@
-"""API v1 router composition"""
+"""
+MediGenius — api/v1/api.py
+Router aggregator: collects all v1 endpoint routers into one.
+"""
+
 from fastapi import APIRouter
-from .endpoints import chat, session, health
 
-api_router = APIRouter()
+from app.api.v1.endpoints import chat, health, session
 
-api_router.include_router(health.router, tags=["Health"])
-api_router.include_router(chat.router, tags=["Chat"])
-api_router.include_router(session.router, tags=["Session"])
+api_router = APIRouter(prefix="/api/v1")
+
+api_router.include_router(health.router)
+api_router.include_router(chat.router)
+api_router.include_router(session.router)

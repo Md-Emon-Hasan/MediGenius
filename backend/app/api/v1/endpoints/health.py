@@ -1,9 +1,14 @@
-"""Health endpoints for v1 API"""
+"""
+MediGenius — api/v1/endpoints/health.py
+Health check endpoint.
+"""
+
 from fastapi import APIRouter
 
-router = APIRouter()
+router = APIRouter(tags=["Health"])
+
 
 @router.get("/health")
 async def health_check():
-    """Health check endpoint"""
-    return {"status": "healthy", "service": "MediGenius Backend v1"}
+    """Returns service health status."""
+    return {"status": "healthy", "service": "MediGenius Backend v2"}

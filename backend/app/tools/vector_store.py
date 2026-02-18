@@ -1,77 +1,88 @@
+"""
+MediGenius — tools/vector_store.py
+ChromaDB vector store: embeddings, creation, loading, and retriever factory.
+"""
+
 import os
+from typing import List, Optional
 
-from langchain_community.vectorstores import Chroma
-from langchain_huggingface.embeddings import HuggingFaceEmbeddings
+from langchain_core.documents import Document
 
-# Global instances
+from app.core.config import VECTOR_STORE_DIR
+from app.core.logging_config import logger
+
 _embeddings = None
 _vectorstore = None
 
 
 def get_embeddings():
+    """Return a cached HuggingFace sentence-transformer embeddings instance."""
     global _embeddings
     if _embeddings is None:
+        from langchain_huggingface.embeddings import HuggingFaceEmbeddings
+
         _embeddings = HuggingFaceEmbeddings(
             model_name="sentence-transformers/all-MiniLM-L6-v2"
         )
+        logger.info("Embeddings model loaded (all-MiniLM-L6-v2)")
     return _embeddings
 
 
-def get_or_create_vectorstore(documents=None, persist_dir='database/medical_db/'):
-    """Get existing vectorstore or create new one if needed"""
+def get_or_create_vectorstore(
+    documents: Optional[List[Document]] = None,
+    persist_dir: str = VECTOR_STORE_DIR,
+):
+    """Load existing ChromaDB vector store or create a new one from documents."""
     global _vectorstore
 
     if _vectorstore is not None:
         return _vectorstore
 
+    from langchain_community.vectorstores import Chroma
+
     embeddings = get_embeddings()
 
-    # Create directory if it doesn't exist
     if not os.path.exists(persist_dir):
         os.makedirs(persist_dir)
 
-    # Check if database files exist
-    db_files_exist = False
-    if os.path.exists(persist_dir):
-        files = os.listdir(persist_dir)
-        # Check for Chroma database files
-        db_files_exist = any(f.endswith('.sqlite3') or f == 'chroma.sqlite3' or
-                             f.startswith('index') for f in files)
+    db_files_exist = any(
+        f.endswith(".sqlite3") or f == "chroma.sqlite3" or f.startswith("index")
+        for f in os.listdir(persist_dir)
+    ) if os.path.exists(persist_dir) else False
 
     if db_files_exist:
-        print("✓ Loading existing vector database...")
+        logger.info("Loading existing vector store from %s", persist_dir)
         _vectorstore = Chroma(
             persist_directory=persist_dir,
             embedding_function=embeddings,
-            collection_metadata={"hnsw:space": "cosine"}
+            collection_metadata={"hnsw:space": "cosine"},
         )
-        # Verify the database has content
-        collection = _vectorstore._collection
-        if collection.count() == 0:
-            print("Vector database is empty, needs to be recreated")
+        if _vectorstore._collection.count() == 0:
+            logger.warning("Vector store is empty — needs to be recreated")
             _vectorstore = None
             return None
-        print(f"Loaded {collection.count()} documents from vector database")
+        logger.info(
+            "Loaded %d documents from vector store", _vectorstore._collection.count()
+        )
     elif documents:
-        print("Creating new vector database...")
+        logger.info("Creating new vector store with %d documents", len(documents))
         _vectorstore = Chroma.from_documents(
             documents=documents,
             embedding=embeddings,
             persist_directory=persist_dir,
-            collection_metadata={"hnsw:space": "cosine"}
+            collection_metadata={"hnsw:space": "cosine"},
         )
         _vectorstore.persist()
-        print(f"Created vector database with {len(documents)} documents")
     else:
-        print("No existing database and no documents provided")
+        logger.warning("No existing vector store and no documents provided")
         return None
 
     return _vectorstore
 
 
-def get_retriever(k=3):
-    """Get retriever from existing vectorstore"""
-    vectorstore = get_or_create_vectorstore()
-    if vectorstore:
-        return vectorstore.as_retriever(search_kwargs={'k': k})
+def get_retriever(k: int = 3):
+    """Return a retriever from the vector store, or None if unavailable."""
+    vs = get_or_create_vectorstore()
+    if vs:
+        return vs.as_retriever(search_kwargs={"k": k})
     return None

@@ -1,37 +1,35 @@
-"""Tests for database service"""
+"""Tests for database service — Deep Modular Architecture"""
 import os
 import sys
 
 import pytest
 
-# Add app to path
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../app')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from services.database_service import DatabaseService  # noqa: E402
+from app.services.database_service import DatabaseService  # noqa: E402
+from app.db.session import get_engine, get_session_factory  # noqa: E402
 
-# Use test DB
 TEST_DB = "tests/test_database/test_chat.db"
 
 
 @pytest.fixture(autouse=True)
 def setup_teardown_db():
     """Setup and teardown test database"""
-    # Ensure a fresh start
+    os.makedirs(os.path.dirname(TEST_DB), exist_ok=True)
     if os.path.exists(TEST_DB):
         try:
             os.remove(TEST_DB)
         except PermissionError:
             pass
 
-    # Create test database service
-    test_db_service = DatabaseService(db_path=TEST_DB)
+    test_engine = get_engine(TEST_DB)
+    test_session = get_session_factory(test_engine)
+    test_db_service = DatabaseService(session_local=test_session, engine_instance=test_engine)
     test_db_service.init_db()
 
     yield test_db_service
 
-    # Teardown
-    # Dispose engine to close connections so file can be deleted on Windows
-    test_db_service.engine.dispose()
+    test_engine.dispose()
     if os.path.exists(TEST_DB):
         try:
             os.remove(TEST_DB)
@@ -40,7 +38,6 @@ def setup_teardown_db():
 
 
 def test_save_and_get_message(setup_teardown_db):
-    """Test saving and retrieving messages"""
     db = setup_teardown_db
     session_id = "sess_1"
 
@@ -54,7 +51,6 @@ def test_save_and_get_message(setup_teardown_db):
 
 
 def test_get_all_sessions(setup_teardown_db):
-    """Test retrieving all sessions"""
     db = setup_teardown_db
 
     db.save_message("sess_1", "user", "msg1")
@@ -69,7 +65,6 @@ def test_get_all_sessions(setup_teardown_db):
 
 
 def test_delete_session(setup_teardown_db):
-    """Test deleting a session"""
     db = setup_teardown_db
 
     db.save_message("sess_to_del", "user", "delete me")

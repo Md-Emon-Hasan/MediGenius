@@ -1,7 +1,4 @@
 .env
-backend/database/
-backend/tests/test_database/
-backend/logs/
 frontend/dist/
 node_modules/
 __pycache__/

@@ -1,2 +1,1 @@
-"""Database package"""
-from .session import engine, SessionLocal
+# db package — database session management

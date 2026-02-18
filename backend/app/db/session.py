@@ -1,25 +1,33 @@
-"""Database session management"""
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+"""
+MediGenius — db/session.py
+SQLAlchemy engine and session factory.
+"""
+
 import os
 
-# Default database path
-DEFAULT_DB_PATH = "database/medigenius.db"
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 
-def get_engine(db_path: str = DEFAULT_DB_PATH):
-    """Create and return SQLAlchemy engine"""
-    # Ensure directory exists
+from app.core.config import CHAT_DB_PATH
+from app.core.logging_config import logger
+
+
+def get_engine(db_path: str = CHAT_DB_PATH):
+    """Create and return a SQLAlchemy engine for the given SQLite path."""
     db_dir = os.path.dirname(db_path)
     if db_dir and not os.path.exists(db_dir):
         os.makedirs(db_dir, exist_ok=True)
-    
-    db_url = f"sqlite:///{db_path}"
-    return create_engine(db_url, connect_args={"check_same_thread": False})
+    logger.debug("Database engine created at %s", db_path)
+    return create_engine(
+        f"sqlite:///{db_path}", connect_args={"check_same_thread": False}
+    )
+
 
 def get_session_factory(engine):
-    """Create and return session factory"""
+    """Return a sessionmaker bound to the given engine."""
     return sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-# Default session components
+
+# Module-level singletons
 engine = get_engine()
 SessionLocal = get_session_factory(engine)
