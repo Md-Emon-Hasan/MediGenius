@@ -30,7 +30,7 @@ describe('App Integration', () => {
     it('loads sessions on mount', async () => {
         const mockSessions = [{ session_id: '1', preview: 'Flu symptoms', last_active: '2023' }];
         mockFetch.mockImplementation((url) => {
-            if (url === '/api/sessions') {
+            if (url === '/api/v1/sessions') {
                 return Promise.resolve({
                     json: () => Promise.resolve({ success: true, sessions: mockSessions }),
                     ok: true
@@ -49,7 +49,7 @@ describe('App Integration', () => {
     it('sends a message and displays response', async () => {
         // Setup mocks
         mockFetch.mockImplementation((url, options) => {
-            if (url === '/api/chat') {
+            if (url === '/api/v1/chat') {
                 return Promise.resolve({
                     json: () => Promise.resolve({
                         success: true,
@@ -80,7 +80,7 @@ describe('App Integration', () => {
 
     it('creates new chat', async () => {
         mockFetch.mockImplementation((url) => {
-            if (url === '/api/new-chat') {
+            if (url === '/api/v1/new-chat') {
                 return Promise.resolve({
                     json: () => Promise.resolve({ success: true, session_id: 'new-session' }),
                     ok: true
@@ -96,7 +96,7 @@ describe('App Integration', () => {
 
         await waitFor(() => {
             // Check if new chat API was called
-            expect(mockFetch).toHaveBeenCalledWith('/api/new-chat', expect.any(Object));
+            expect(mockFetch).toHaveBeenCalledWith('/api/v1/new-chat', expect.any(Object));
         });
     });
 });

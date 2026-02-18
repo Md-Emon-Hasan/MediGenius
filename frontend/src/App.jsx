@@ -15,7 +15,7 @@ function App() {
   useEffect(() => {
     fetchSessions();
     // Check if there is an active session
-    fetch('/api/history')
+    fetch('/api/v1/history')
       .then(res => res.json())
       .then(data => {
         if (data.success && data.messages) {
@@ -27,7 +27,7 @@ function App() {
 
   const fetchSessions = async () => {
     try {
-      const res = await fetch('/api/sessions');
+      const res = await fetch('/api/v1/sessions');
       const data = await res.json();
       if (data.success) {
         setChatHistory(data.sessions);
@@ -49,7 +49,7 @@ function App() {
     setIsTyping(true);
 
     try {
-      const res = await fetch('/api/chat', {
+      const res = await fetch('/api/v1/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: text })
@@ -78,7 +78,7 @@ function App() {
 
   const handleNewChat = async () => {
     try {
-      const res = await fetch('/api/new-chat', { method: 'POST' });
+      const res = await fetch('/api/v1/new-chat', { method: 'POST' });
       const data = await res.json();
       if (data.success) {
         setMessages([]);
@@ -93,7 +93,7 @@ function App() {
 
   const handleLoadSession = async (sessionId) => {
     try {
-      const res = await fetch(`/api/session/${sessionId}`);
+      const res = await fetch(`/api/v1/session/${sessionId}`);
       const data = await res.json();
       if (data.success) {
         setMessages(data.messages);
@@ -110,7 +110,7 @@ function App() {
     if (!window.confirm("Delete this chat?")) return;
 
     try {
-      const res = await fetch(`/api/session/${sessionId}`, { method: 'DELETE' });
+      const res = await fetch(`/api/v1/session/${sessionId}`, { method: 'DELETE' });
       const data = await res.json();
       if (data.success) {
         fetchSessions();

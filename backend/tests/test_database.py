@@ -10,14 +10,18 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../a
 from services.database_service import DatabaseService  # noqa: E402
 
 # Use test DB
-TEST_DB = "test_chat.db"
+TEST_DB = "tests/test_database/test_chat.db"
 
 
 @pytest.fixture(autouse=True)
 def setup_teardown_db():
     """Setup and teardown test database"""
+    # Ensure a fresh start
     if os.path.exists(TEST_DB):
-        os.remove(TEST_DB)
+        try:
+            os.remove(TEST_DB)
+        except PermissionError:
+            pass
 
     # Create test database service
     test_db_service = DatabaseService(db_path=TEST_DB)
@@ -26,8 +30,13 @@ def setup_teardown_db():
     yield test_db_service
 
     # Teardown
+    # Dispose engine to close connections so file can be deleted on Windows
+    test_db_service.engine.dispose()
     if os.path.exists(TEST_DB):
-        os.remove(TEST_DB)
+        try:
+            os.remove(TEST_DB)
+        except PermissionError:
+            print(f"Warning: Could not delete {TEST_DB} - file still in use")
 
 
 def test_save_and_get_message(setup_teardown_db):

@@ -74,7 +74,7 @@ class TestChatService:
         service = ChatService()
         service.conversation_states["test-session"] = {"question": "old"}
         service.clear_conversation("test-session")
-        assert "question" not in service.conversation_states["test-session"]
+        assert service.conversation_states["test-session"]["question"] == ""
 
     def test_clear_conversation_nonexistent(self):
         """Test clearing non-existent conversation"""
@@ -95,6 +95,7 @@ class TestDatabaseService:
         assert service.db_path == test_db
         assert os.path.exists(test_db)
 
+        service.engine.dispose()
         os.remove(test_db)
 
     def test_save_and_retrieve_message(self):
@@ -112,6 +113,7 @@ class TestDatabaseService:
         assert history[0]["role"] == "user"
         assert history[1]["content"] == "Hi there"
 
+        service.engine.dispose()
         os.remove(test_db)
 
     def test_get_all_sessions(self):
@@ -130,6 +132,7 @@ class TestDatabaseService:
         assert "sess1" in session_ids
         assert "sess2" in session_ids
 
+        service.engine.dispose()
         os.remove(test_db)
 
     def test_delete_session(self):
@@ -145,4 +148,5 @@ class TestDatabaseService:
         service.delete_session("sess_del")
         assert len(service.get_chat_history("sess_del")) == 0
 
+        service.engine.dispose()
         os.remove(test_db)

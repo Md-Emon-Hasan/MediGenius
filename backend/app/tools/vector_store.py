@@ -17,7 +17,7 @@ def get_embeddings():
     return _embeddings
 
 
-def get_or_create_vectorstore(documents=None, persist_dir='./medical_db/'):
+def get_or_create_vectorstore(documents=None, persist_dir='database/medical_db/'):
     """Get existing vectorstore or create new one if needed"""
     global _vectorstore
 

@@ -4,11 +4,11 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - ./backend/data:/app/data
+      - ./backend/database:/app/database
       - ./backend/logs:/app/logs
     environment:
       - PYTHONUNBUFFERED=1
-      - PDF_PATH=/app/data/medical_book.pdf
+      - PDF_PATH=/app/database/medical_book.pdf
     restart: always
 
   frontend:

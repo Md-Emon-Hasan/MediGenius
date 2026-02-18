@@ -2,25 +2,28 @@
 from typing import Dict, List, Optional
 
 from core.logging_config import logger
+from db import SessionLocal, engine
 from models.message import Base, Message
-from sqlalchemy import create_engine, delete, desc, func, select
-from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy import delete, desc, func, select
+from sqlalchemy.orm import Session
 
 
 class DatabaseService:
     """Service class for database operations using SQLAlchemy"""
 
-    def __init__(self, db_path: str = "data/medigenius.db"):
+    def __init__(self, db_path: str = None, session_local=None, engine_instance=None):
         """Initialize database service"""
-        # Ensure data directory exists if provided
-        import os
-        db_dir = os.path.dirname(db_path)
-        if db_dir:
-            os.makedirs(db_dir, exist_ok=True)
-        self.db_url = f"sqlite:///{db_path}"
-        self.engine = create_engine(self.db_url, connect_args={"check_same_thread": False})
-        self.SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=self.engine)
-        logger.info(f"DatabaseService initialized with SQLAlchemy: {self.db_url}")
+        if db_path:
+            from db.session import get_engine, get_session_factory
+            self.engine = engine_instance or get_engine(db_path)
+            self.SessionLocal = session_local or get_session_factory(self.engine)
+            self.db_path = db_path # Keep for test cleanup
+        else:
+            self.SessionLocal = session_local or SessionLocal
+            self.engine = engine_instance or engine
+            self.db_path = None
+        
+        logger.info("DatabaseService initialized")
         self.init_db()
 
     def init_db(self):

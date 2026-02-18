@@ -36,7 +36,7 @@ async def lifespan(app: FastAPI):
     print("Database initialized...")
 
     # Process PDF and create vector store
-    pdf_path = os.getenv("PDF_PATH", "data/medical_book.pdf")
+    pdf_path = os.getenv("PDF_PATH", "database/medical_book.pdf")
     if os.path.exists(pdf_path):
         print(f"Processing PDF: {pdf_path}")
         documents = process_pdf(pdf_path)
@@ -78,9 +78,9 @@ app.add_middleware(
 app.add_middleware(SessionMiddleware, secret_key=secrets.token_hex(32))
 
 # Include API routes
-from api.routes import router  # noqa: E402
+from api import api_router  # noqa: E402
 
-app.include_router(router)
+app.include_router(api_router, prefix="/api")
 
 
 if __name__ == "__main__":
