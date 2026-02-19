@@ -17,7 +17,6 @@ sentence-transformers==5.2.0
 chromadb==1.4.0
 langchain-chroma==1.1.0
 torch==2.9.1
-tensorflow==2.15.0
 transformers==4.57.3
 
 # Data Processing
