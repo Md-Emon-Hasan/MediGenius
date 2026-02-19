@@ -14,13 +14,8 @@ export default defineConfig({
   },
   test: {
     globals: true,
-    environment: 'jsdom',
+    environment: 'happy-dom',
     setupFiles: './src/setupTests.js',
     css: false,
-    server: {
-      deps: {
-        inline: [/jsdom/, /html-encoding-sniffer/, /@exodus\/bytes/],
-      },
-    },
   },
 })

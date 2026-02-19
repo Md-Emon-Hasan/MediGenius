@@ -22,8 +22,7 @@ class TestChatService:
 
     def test_initialize_workflow(self):
         service = ChatService()
-        import app.services.chat_service as chat_mod
-        with patch.object(chat_mod, 'create_workflow') as mock_create:
+        with patch('app.services.chat_service.create_workflow') as mock_create:
             mock_create.return_value = MagicMock()
             service.initialize_workflow()
             assert service.workflow_app is not None
