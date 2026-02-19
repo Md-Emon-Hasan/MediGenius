@@ -1,6 +1,6 @@
 from unittest.mock import patch
 
-from app.services import db_service, chat_service
+from app.services import chat_service, db_service
 
 
 def test_health_check(test_client):
