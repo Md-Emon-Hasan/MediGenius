@@ -34,7 +34,6 @@ jobs:
         
     - name: Run Backend Tests
       run: |
-        export PYTHONPATH=$PYTHONPATH:$(pwd)/app
         pytest --cov=app --cov-report=term-missing tests/
 
   frontend-test:
