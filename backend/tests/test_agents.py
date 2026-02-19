@@ -60,6 +60,13 @@ def test_retriever_agent_failure():
         assert new_state["rag_success"] is False
 
 
+def test_retriever_agent_no_tool():
+    state = initialize_conversation_state()
+    with patch('app.agents.retriever.get_retriever', return_value=None):
+        new_state = RetrieverAgent(state)
+        assert new_state["rag_success"] is False
+
+
 # --- LLM Agent Tests ---
 def test_llm_agent():
     state = initialize_conversation_state()
@@ -74,6 +81,14 @@ def test_llm_agent():
         assert new_state["generation"] == "Hello there my friend, this is a long enough response."
 
 
+def test_llm_agent_no_tool():
+    state = initialize_conversation_state()
+    with patch('app.agents.llm_agent.get_llm', return_value=None):
+        new_state = LLMAgent(state)
+        assert new_state["llm_success"] is False
+        assert "unavailable" in new_state["generation"]
+
+
 # --- Wikipedia Agent Tests ---
 def test_wikipedia_agent():
     state = initialize_conversation_state()
@@ -84,6 +99,23 @@ def test_wikipedia_agent():
         mock_get.return_value = mock_wiki
         new_state = WikipediaAgent(state)
         assert new_state["wiki_success"] is True
+
+
+def test_wikipedia_agent_no_tool():
+    state = initialize_conversation_state()
+    with patch('app.agents.wikipedia.get_wikipedia_wrapper', return_value=None):
+        new_state = WikipediaAgent(state)
+        assert new_state["wiki_success"] is False
+
+
+def test_wikipedia_agent_short_content():
+    state = initialize_conversation_state()
+    with patch('app.agents.wikipedia.get_wikipedia_wrapper') as mock_get:
+        mock_wiki = MagicMock()
+        mock_wiki.run.return_value = "short"
+        mock_get.return_value = mock_wiki
+        new_state = WikipediaAgent(state)
+        assert new_state["wiki_success"] is False
 
 
 # --- Tavily Agent Tests ---
@@ -97,6 +129,24 @@ def test_tavily_agent():
         mock_get.return_value = mock_tav
         new_state = TavilyAgent(state)
         assert new_state["tavily_success"] is True
+
+
+def test_tavily_agent_no_tool():
+    state = initialize_conversation_state()
+    with patch('app.agents.tavily.get_tavily_search', return_value=None):
+        new_state = TavilyAgent(state)
+        assert new_state["tavily_success"] is False
+
+
+def test_tavily_agent_fail():
+    state = initialize_conversation_state()
+    with patch('app.agents.tavily.get_tavily_search') as mock_get:
+        mock_tav = MagicMock()
+        mock_tav.invoke.side_effect = Exception("error")
+        mock_get.return_value = mock_tav
+        new_state = TavilyAgent(state)
+        assert new_state["tavily_success"] is False
+        assert new_state["documents"] == []
 
 
 # --- Memory Agent Tests ---
@@ -130,10 +180,21 @@ def test_executor_agent_with_docs():
 def test_executor_agent_no_llm():
     state = initialize_conversation_state()
     state["question"] = "test"
-    with patch('app.agents.executor.get_llm') as mock_get_llm:
-        mock_get_llm.return_value = None
+    with patch('app.agents.executor.get_llm', return_value=None):
         new_state = ExecutorAgent(state)
         assert "temporarily unavailable" in new_state["generation"]
+
+
+def test_executor_agent_llm_fail():
+    state = initialize_conversation_state()
+    state["question"] = "test"
+    state["documents"] = [Document(page_content="some content")]
+    with patch('app.agents.executor.get_llm') as mock_get:
+        mock_llm = MagicMock()
+        mock_llm.invoke.side_effect = Exception("error")
+        mock_get.return_value = mock_llm
+        new_state = ExecutorAgent(state)
+        assert "consult with a healthcare professional" in new_state["generation"].lower()
 
 
 # --- Explanation Agent Tests ---

@@ -20,7 +20,11 @@ def TavilyAgent(state: AgentState) -> AgentState:
         return state
 
     search_query = f"{state['question']} medical health treatment symptoms"
-    results = tavily.invoke(search_query)
+    try:
+        results = tavily.invoke(search_query)
+    except Exception as e:
+        logger.error("Tavily: Search failed: %s", str(e))
+        results = []
 
     valid_results = [
         r

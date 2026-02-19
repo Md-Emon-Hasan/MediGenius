@@ -40,13 +40,21 @@ def ExecutorAgent(state: AgentState) -> AgentState:
             f"Medical Information:\n{content}\n\n"
             "Provide a clear, caring response in 2-4 sentences. Be professional and reassuring."
         )
-        response = llm.invoke(prompt)
-        answer = (
-            response.content.strip()
-            if hasattr(response, "content")
-            else str(response).strip()
-        )
-        logger.info("Executor: Generated response from documents")
+        try:
+            response = llm.invoke(prompt)
+            answer = (
+                response.content.strip()
+                if hasattr(response, "content")
+                else str(response).strip()
+            )
+            logger.info("Executor: Generated response from documents")
+        except Exception as e:
+            logger.error("Executor: LLM generation failed: %s", str(e))
+            answer = (
+                "I understand your concern about your symptoms. For accurate medical advice, "
+                "please consult with a healthcare professional who can properly evaluate your condition."
+            )
+            source_info = "System Message"
 
     elif state.get("llm_success") and state.get("generation"):
         answer = state["generation"]

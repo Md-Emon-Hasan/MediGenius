@@ -6,8 +6,8 @@ import pytest
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from app.services.database_service import DatabaseService  # noqa: E402
 from app.db.session import get_engine, get_session_factory  # noqa: E402
+from app.services.database_service import DatabaseService  # noqa: E402
 
 TEST_DB = "tests/test_database/test_chat.db"
 

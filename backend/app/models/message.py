@@ -4,7 +4,7 @@ SQLAlchemy ORM model for chat messages.
 """
 
 from datetime import datetime
-from typing import Dict, Optional
+from typing import Dict
 
 from sqlalchemy import Column, DateTime, Integer, String, Text
 from sqlalchemy.orm import declarative_base

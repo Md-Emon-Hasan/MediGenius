@@ -14,6 +14,7 @@ def LLMAgent(state: AgentState) -> AgentState:
     if not llm:
         state["llm_success"] = False
         state["llm_attempted"] = True
+        state["generation"] = "Medical AI service is temporarily unavailable."
         return state
 
     # Build conversation context

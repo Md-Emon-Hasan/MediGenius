@@ -20,9 +20,6 @@ services:
   - type: static
     name: medigenius-web
     runtime: node
-    buildCommand: npm install && npm run build
-    publishPath: ./dist
-    staticPublishPath: ./dist
     buildCommand: cd frontend && npm install && npm run build
     publishPath: ./frontend/dist
     envVars:
