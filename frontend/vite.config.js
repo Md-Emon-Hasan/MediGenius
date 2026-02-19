@@ -17,5 +17,10 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: './src/setupTests.js',
     css: false,
+    server: {
+      deps: {
+        inline: ['html-encoding-sniffer', /@exodus\/bytes/],
+      },
+    },
   },
 })

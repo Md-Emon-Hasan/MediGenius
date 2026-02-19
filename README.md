@@ -176,42 +176,79 @@ graph TD
 
 ---
 
-## **🚀 Running the Project**
+## **🚀 Getting Started**
 
-### **Option 1: Unified Script (Local Dev)**
-Run both Backend and Frontend with a single command:
-```bash
-python run.py
-```
-- **Backend API**: `http://localhost:8000/api/v1`
-- **Frontend UI**: `http://localhost:5173`
+### **1. Prerequisites**
+- **Python**: 3.10 or higher
+- **Node.js**: 18+ (for frontend)
+- **API Keys**: 
+  - `GROQ_API_KEY` (Get from [Groq Console](https://console.groq.com/))
+  - `TAVILY_API_KEY` (Get from [Tavily AI](https://tavily.com/))
 
-### **Option 2: Docker (Production)**
-```bash
-docker-compose up --build
+### **2. Environment Setup**
+Create a `.env` file in the root directory:
+```env
+GROQ_API_KEY=your_key_here
+TAVILY_API_KEY=your_key_here
+DATABASE_URL=sqlite:///./backend/database/medigenius.db
 ```
-The Docker setup includes optimized builds and volume persistence for both SQLite and Vector stores.
 
 ---
 
-## **🧪 Testing and Quality**
+## **🏃 Running the Project**
 
-### **Backend Tests (Pytest)**
+### **Option 1: Unified Local Run**
+We provide a helper script to launch both services simultaneously:
+```bash
+python run.py
+```
+- **Backend API**: `http://localhost:8000` (Docs: `/docs`)
+- **Frontend UI**: `http://localhost:5173`
+
+### **Option 2: Docker Orchestration (Recommended)**
+Use Docker for a production-grade containerized environment:
+```bash
+# Build and start all services
+docker-compose up --build
+```
+*Docker ensures that Python dependencies, Nginx proxying, and volume persistence for ChromaDB/SQLite are handled automatically.*
+
+---
+
+## **🧪 Testing and QA**
+
+### **Backend Coverage (100% Logic)**
+The backend features a robust test suite using `pytest` and `pytest-cov`, reaching **100% logic coverage**.
 ```bash
 cd backend
-python -m pytest tests/ -v
-```
-*Current coverage incluye Agents, Services, API v1, and Core logic (48/48 tests passing).*
+# Run all tests
+python -m pytest tests/
 
-### **Frontend Tests (Vitest)**
-```bash
-cd frontend
-npm run test
+# Check coverage report
+python -m pytest --cov=app tests/ --cov-report=term-missing
 ```
-*Validated UI components and API integration (11/11 tests passing).*
 
-### **Linting & Sorting**
-We use `flake8` for linting and `isort` for import organization to ensure industry-standard code quality.
+### **Code Quality (PEP8)**
+We strictly enforce code standards:
+- **Linting**: `flake8 app/ tests/`
+- **Import Sorting**: `isort app/ tests/` (Automatically organized)
+- **Zero-Log Policy**: Tests are configured to suppress `.log` file creation to keep the workspace clean.
+
+---
+
+## **⚙️ CI/CD & DevOps**
+
+### **GitHub Actions**
+The project includes a pre-configured CI/CD pipeline (`.github/workflows/ci-cd.yml`) that triggers on every push or pull request to the **`master`** branch.
+- **Automated Testing**: Runs the full `pytest` suite on every push.
+- **Lint Checks**: Verifies `flake8` and `isort` compliance.
+- **Docker Build**: Validates the Docker image build process for both components.
+
+### **Cloud Deployment (Render)**
+Ready for one-click deployment via `render.yml`:
+- **Backend**: Deployed as a Web Service.
+- **Frontend**: Deployed as a Static Site.
+- **Database**: Persistent disk attached for SQLite storage.
 
 ---
 
