@@ -22,7 +22,8 @@ class TestChatService:
 
     def test_initialize_workflow(self):
         service = ChatService()
-        with patch('app.services.chat_service.create_workflow') as mock_create:
+        import app.services.chat_service as chat_mod
+        with patch.object(chat_mod, 'create_workflow') as mock_create:
             mock_create.return_value = MagicMock()
             service.initialize_workflow()
             assert service.workflow_app is not None
@@ -36,8 +37,8 @@ class TestChatService:
             "generation": "Test response",
             "source": "Test Source"
         })
-
-        with patch('app.services.chat_service.db_service.save_message'):
+        from app.services import db_service
+        with patch.object(db_service, 'save_message'):
             result = await service.process_message("test-session", "Hello")
             assert result["success"] is True
             assert result["response"] == "Test response"
@@ -58,8 +59,8 @@ class TestChatService:
             "generation": "Sync response",
             "source": "Sync Source"
         })
-
-        with patch('app.services.chat_service.db_service.save_message'):
+        from app.services import db_service
+        with patch.object(db_service, 'save_message'):
             result = await service.process_message("test-session", "Hello")
             assert result["success"] is True
             assert result["response"] == "Sync response"

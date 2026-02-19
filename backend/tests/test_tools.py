@@ -85,7 +85,8 @@ def test_pdf_loader():
 
 def test_get_duckduckgo_no_import():
     ddg_module._ddg_search = None
-    with patch('builtins.__import__', side_effect=ImportError):
+    # Patch the actual source to trigger ImportError in the local import
+    with patch('langchain_community.tools.DuckDuckGoSearchRun', side_effect=ImportError):
         # We need to be careful with __import__ patching
         with patch('app.tools.duckduckgo_search.logger') as mock_log:
             res = get_duckduckgo_search()

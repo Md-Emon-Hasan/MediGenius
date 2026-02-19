@@ -1,0 +1,70 @@
+============================= test session starts =============================
+platform win32 -- Python 3.12.0, pytest-9.0.2, pluggy-1.6.0
+rootdir: C:\Users\codix\OneDrive\Desktop\my project\MediGenius\backend
+configfile: pytest.ini (WARNING: ignoring pytest config in pyproject.toml!)
+plugins: anyio-4.12.0, langsmith-0.6.0, asyncio-1.3.0, cov-7.0.0
+asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collected 11 items
+
+tests\test_services.py .F.........                                       [100%]
+
+================================== FAILURES ===================================
+__________________ TestChatService.test_initialize_workflow ___________________
+
+self = <test_services.TestChatService object at 0x000001A79321E900>
+
+    def test_initialize_workflow(self):
+        service = ChatService()
+        from app.services import chat_service as chat_module
+>       with patch.object(chat_module, 'create_workflow') as mock_create:
+
+tests\test_services.py:26: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+C:\Users\codix\AppData\Local\Programs\Python\Python312\Lib\unittest\mock.py:1455: in __enter__
+    original, local = self.get_original()
+                      ^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <unittest.mock._patch object at 0x000001A79321C350>
+
+    def get_original(self):
+        target = self.getter()
+        name = self.attribute
+    
+        original = DEFAULT
+        local = False
+    
+        try:
+            original = target.__dict__[name]
+        except (AttributeError, KeyError):
+            original = getattr(target, name, DEFAULT)
+        else:
+            local = True
+    
+        if name in _builtins and isinstance(target, ModuleType):
+            self.create = True
+    
+        if not self.create and original is DEFAULT:
+>           raise AttributeError(
+                "%s does not have the attribute %r" % (target, name)
+            )
+E           AttributeError: <app.services.chat_service.ChatService object at 0x000001A79079FCB0> does not have the attribute 'create_workflow'
+
+C:\Users\codix\AppData\Local\Programs\Python\Python312\Lib\unittest\mock.py:1428: AttributeError
+---------------------------- Captured stderr call -----------------------------
+2026-02-19 16:17:12 - medigenius - INFO - ChatService initialized
+------------------------------ Captured log call ------------------------------
+INFO     medigenius:chat_service.py:21 ChatService initialized
+============================== warnings summary ===============================
+tests/test_services.py::TestDatabaseService::test_save_and_retrieve_message
+tests/test_services.py::TestDatabaseService::test_save_and_retrieve_message
+tests/test_services.py::TestDatabaseService::test_get_all_sessions
+tests/test_services.py::TestDatabaseService::test_get_all_sessions
+tests/test_services.py::TestDatabaseService::test_delete_session
+  C:\Users\codix\AppData\Local\Programs\Python\Python312\Lib\site-packages\sqlalchemy\sql\schema.py:3624: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    return util.wrap_callable(lambda ctx: fn(), fn)  # type: ignore
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/test_services.py::TestChatService::test_initialize_workflow - At...
+================== 1 failed, 10 passed, 5 warnings in 0.35s ===================

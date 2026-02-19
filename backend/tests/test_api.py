@@ -1,5 +1,5 @@
-"""Tests for API endpoints — Deep Modular Architecture"""
 from unittest.mock import patch
+from app.services import db_service, chat_service
 
 
 def test_health_check(test_client):
@@ -18,7 +18,7 @@ def test_new_chat(test_client):
 
 
 def test_get_sessions(test_client):
-    with patch('app.services.database_service.db_service.get_all_sessions') as mock_get:
+    with patch.object(db_service, 'get_all_sessions') as mock_get:
         mock_get.return_value = [{"session_id": "123", "preview": "hi", "last_active": "2024-01-01"}]
         response = test_client.get("/api/v1/sessions")
         assert response.status_code == 200
@@ -52,7 +52,7 @@ def test_chat_flow_success(test_client, mock_dependencies):
 
 
 def test_chat_flow_system_not_initialized(test_client):
-    with patch('app.services.chat_service.chat_service.workflow_app', None):
+    with patch.object(chat_service, 'workflow_app', None):
         response = test_client.post(
             "/api/v1/chat",
             json={"message": "Hello"},
@@ -62,7 +62,7 @@ def test_chat_flow_system_not_initialized(test_client):
 
 
 def test_get_history(test_client):
-    with patch('app.services.database_service.db_service.get_chat_history') as mock_hist:
+    with patch.object(db_service, 'get_chat_history') as mock_hist:
         mock_hist.return_value = [{"role": "user", "content": "hi"}]
         response = test_client.get("/api/v1/history", headers={"X-Session-ID": "test-sess"})
         assert response.status_code == 200
@@ -70,7 +70,7 @@ def test_get_history(test_client):
 
 
 def test_load_session(test_client):
-    with patch('app.services.database_service.db_service.get_chat_history') as mock_hist:
+    with patch.object(db_service, 'get_chat_history') as mock_hist:
         mock_hist.return_value = []
         response = test_client.get("/api/v1/session/test-session-id")
         assert response.status_code == 200
@@ -78,7 +78,7 @@ def test_load_session(test_client):
 
 
 def test_delete_session(test_client):
-    with patch('app.services.database_service.db_service.delete_session') as mock_del:
+    with patch.object(db_service, 'delete_session') as mock_del:
         response = test_client.delete("/api/v1/session/test-id")
         assert response.status_code == 200
         assert response.json()["message"] == "Session deleted"
