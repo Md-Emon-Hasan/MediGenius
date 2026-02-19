@@ -316,6 +316,8 @@ function InputArea({ inputValue, setInputValue, onSend, isTyping, inputRef }) {
           </button>
           <button
             className="send-btn"
+            title="Send message"
+            aria-label="Send message"
             onClick={onSend}
             disabled={!inputValue.trim() || isTyping}
           >

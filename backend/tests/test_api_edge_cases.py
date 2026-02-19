@@ -1,5 +1,6 @@
 """Edge case tests for API routes — Deep Modular Architecture"""
 from unittest.mock import patch
+
 from app.services import chat_service, db_service
 
 
