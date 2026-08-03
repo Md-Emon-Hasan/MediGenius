@@ -5,13 +5,12 @@ LLMAgent: generates a direct response from the LLM without RAG.
 
 from app.core.logging_config import logger
 from app.core.state import AgentState
-from app.tools.llm_client import get_llm
+from app.tools import model_gateway
 
 
 def LLMAgent(state: AgentState) -> AgentState:
     """Generate a response directly from the LLM (no retrieval)."""
-    llm = get_llm()
-    if not llm:
+    if not model_gateway.is_available():
         state["llm_success"] = False
         state["llm_attempted"] = True
         state["generation"] = "Medical AI service is temporarily unavailable."
@@ -32,17 +31,15 @@ def LLMAgent(state: AgentState) -> AgentState:
         "Provide a helpful medical response in 2-3 sentences. Be clear, professional, and caring."
     )
 
-    response = llm.invoke(prompt)
-    answer = (
-        response.content.strip()
-        if hasattr(response, "content")
-        else str(response).strip()
-    )
+    result = model_gateway.generate(prompt, tier="synthesis")
+    answer = result["content"]
 
     if answer and len(answer) > 10:
         state["generation"] = answer
         state["llm_success"] = True
         state["source"] = "AI Medical Knowledge"
+        state["model_used"] = result["model_used"]
+        state["model_fallback"] = result["fallback"]
         logger.info("LLM: Generated response successfully")
     else:
         state["llm_success"] = False

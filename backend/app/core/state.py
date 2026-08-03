@@ -27,6 +27,8 @@ class AgentState(TypedDict):
     tavily_success: bool
     current_tool: Optional[str]
     retry_count: int
+    model_used: Optional[str]
+    model_fallback: bool
 
 
 def initialize_conversation_state() -> AgentState:
@@ -48,6 +50,8 @@ def initialize_conversation_state() -> AgentState:
         "tavily_success": False,
         "current_tool": None,
         "retry_count": 0,
+        "model_used": None,
+        "model_fallback": False,
     }
 
 
@@ -70,6 +74,8 @@ def reset_query_state(state: AgentState) -> AgentState:
             "tavily_success": False,
             "current_tool": None,
             "retry_count": 0,
+            "model_used": None,
+            "model_fallback": False,
         }
     )
     return state

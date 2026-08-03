@@ -6,12 +6,16 @@ ExecutorAgent: synthesizes the final response using the LLM and gathered context
 from app.core import safety_router
 from app.core.logging_config import logger
 from app.core.state import AgentState
-from app.tools.llm_client import get_llm
+from app.tools import model_gateway
+
+FALLBACK_ANSWER = (
+    "I understand your concern about your symptoms. For accurate medical advice, "
+    "please consult with a healthcare professional who can properly evaluate your condition."
+)
 
 
 def ExecutorAgent(state: AgentState) -> AgentState:
     """Synthesize the final patient response from retrieved documents or LLM knowledge."""
-    llm = get_llm()
     question = state["question"]
     source_info = state.get("source", "Unknown")
 
@@ -23,7 +27,7 @@ def ExecutorAgent(state: AgentState) -> AgentState:
         elif item.get("role") == "assistant":
             history_context += f"Doctor: {item.get('content', '')}\n"
 
-    if not llm:
+    if not model_gateway.is_available():
         answer = (
             "Medical AI service temporarily unavailable. "
             "Please consult a healthcare professional."
@@ -41,20 +45,14 @@ def ExecutorAgent(state: AgentState) -> AgentState:
             f"Medical Information:\n{content}\n\n"
             "Provide a clear, caring response in 2-4 sentences. Be professional and reassuring."
         )
-        try:
-            response = llm.invoke(prompt)
-            answer = (
-                response.content.strip()
-                if hasattr(response, "content")
-                else str(response).strip()
-            )
+        result = model_gateway.generate(prompt, tier="synthesis")
+        if result["content"]:
+            answer = result["content"]
+            state["model_used"] = result["model_used"]
+            state["model_fallback"] = result["fallback"]
             logger.info("Executor: Generated response from documents")
-        except Exception as e:
-            logger.error("Executor: LLM generation failed: %s", str(e))
-            answer = (
-                "I understand your concern about your symptoms. For accurate medical advice, "
-                "please consult with a healthcare professional who can properly evaluate your condition."
-            )
+        else:
+            answer = FALLBACK_ANSWER
             source_info = "System Message"
 
     elif state.get("llm_success") and state.get("generation"):
@@ -62,10 +60,7 @@ def ExecutorAgent(state: AgentState) -> AgentState:
         logger.info("Executor: Using pre-generated LLM response")
 
     else:
-        answer = (
-            "I understand your concern about your symptoms. For accurate medical advice, "
-            "please consult with a healthcare professional who can properly evaluate your condition."
-        )
+        answer = FALLBACK_ANSWER
         source_info = "System Message"
 
     state["generation"] = answer

@@ -71,11 +71,12 @@ def test_retriever_agent_no_tool():
 def test_llm_agent():
     state = initialize_conversation_state()
     state["question"] = "Hi"
-    with patch('app.agents.llm_agent.get_llm') as mock_get:
-        mock_llm = MagicMock()
-        mock_llm.invoke.return_value.content = "Hello there my friend, this is a long enough response."
-        mock_get.return_value = mock_llm
-
+    with patch('app.agents.llm_agent.model_gateway.is_available', return_value=True), \
+         patch('app.agents.llm_agent.model_gateway.generate') as mock_gen:
+        mock_gen.return_value = {
+            "content": "Hello there my friend, this is a long enough response.",
+            "model_used": "groq/openai/gpt-oss-120b", "fallback": False, "degraded": False,
+        }
         new_state = LLMAgent(state)
         assert new_state["llm_success"] is True
         assert new_state["generation"] == "Hello there my friend, this is a long enough response."
@@ -83,7 +84,7 @@ def test_llm_agent():
 
 def test_llm_agent_no_tool():
     state = initialize_conversation_state()
-    with patch('app.agents.llm_agent.get_llm', return_value=None):
+    with patch('app.agents.llm_agent.model_gateway.is_available', return_value=False):
         new_state = LLMAgent(state)
         assert new_state["llm_success"] is False
         assert "unavailable" in new_state["generation"]
@@ -166,11 +167,12 @@ def test_executor_agent_with_docs():
     state["question"] = "What is X?"
     state["documents"] = [Document(page_content="X is Y.")]
 
-    with patch('app.agents.executor.get_llm') as mock_get_llm:
-        mock_llm = MagicMock()
-        mock_llm.invoke.return_value.content = "X is likely Y based on docs."
-        mock_get_llm.return_value = mock_llm
-
+    with patch('app.agents.executor.model_gateway.is_available', return_value=True), \
+         patch('app.agents.executor.model_gateway.generate') as mock_gen:
+        mock_gen.return_value = {
+            "content": "X is likely Y based on docs.", "model_used": "groq/openai/gpt-oss-120b",
+            "fallback": False, "degraded": False,
+        }
         new_state = ExecutorAgent(state)
 
         assert new_state["generation"] == "X is likely Y based on docs."
@@ -180,7 +182,7 @@ def test_executor_agent_with_docs():
 def test_executor_agent_no_llm():
     state = initialize_conversation_state()
     state["question"] = "test"
-    with patch('app.agents.executor.get_llm', return_value=None):
+    with patch('app.agents.executor.model_gateway.is_available', return_value=False):
         new_state = ExecutorAgent(state)
         assert "temporarily unavailable" in new_state["generation"]
 
@@ -189,10 +191,9 @@ def test_executor_agent_llm_fail():
     state = initialize_conversation_state()
     state["question"] = "test"
     state["documents"] = [Document(page_content="some content")]
-    with patch('app.agents.executor.get_llm') as mock_get:
-        mock_llm = MagicMock()
-        mock_llm.invoke.side_effect = Exception("error")
-        mock_get.return_value = mock_llm
+    with patch('app.agents.executor.model_gateway.is_available', return_value=True), \
+         patch('app.agents.executor.model_gateway.generate') as mock_gen:
+        mock_gen.return_value = {"content": None, "model_used": None, "fallback": False, "degraded": True}
         new_state = ExecutorAgent(state)
         assert "consult with a healthcare professional" in new_state["generation"].lower()
 

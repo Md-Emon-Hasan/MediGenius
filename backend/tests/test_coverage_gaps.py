@@ -20,9 +20,9 @@ from app.tools.vector_store import get_or_create_vectorstore  # noqa: E402
 
 
 def test_executor_full_coverage():
-    # Branch 1: if not llm
+    # Branch 1: model gateway unavailable
     state = initialize_conversation_state()
-    with patch("app.agents.executor.get_llm", return_value=None):
+    with patch("app.agents.executor.model_gateway.is_available", return_value=False):
         res = ExecutorAgent(state)
         assert "unavailable" in res["generation"]
 
@@ -33,29 +33,29 @@ def test_executor_full_coverage():
         {"role": "user", "content": "hi"},
         {"role": "assistant", "content": "hello"}
     ]
-    with patch("app.agents.executor.get_llm") as mock_get:
-        mock_llm = MagicMock()
-        mock_llm.invoke.return_value.content = "response from docs"
-        mock_get.return_value = mock_llm
+    with patch("app.agents.executor.model_gateway.is_available", return_value=True), \
+         patch("app.agents.executor.model_gateway.generate") as mock_gen:
+        mock_gen.return_value = {
+            "content": "response from docs", "model_used": "groq/openai/gpt-oss-120b",
+            "fallback": False, "degraded": False,
+        }
         res = ExecutorAgent(state)
         assert "response from docs" in res["generation"]
         assert len(res["conversation_history"]) >= 2
 
-    # Branch 3: llm_success and generation (line 59-61)
+    # Branch 3: llm_success and generation (pre-generated answer reused)
     state = initialize_conversation_state()
     state["llm_success"] = True
     state["generation"] = "pre-gen"
-    with patch("app.agents.executor.get_llm") as mock_get:
-        mock_get.return_value = MagicMock()
+    with patch("app.agents.executor.model_gateway.is_available", return_value=True):
         res = ExecutorAgent(state)
         assert res["generation"] == "pre-gen"
 
-    # Branch 4: else (line 63-68)
+    # Branch 4: else (no documents, no pre-generated answer)
     state = initialize_conversation_state()
     state["llm_success"] = False
     state["documents"] = []
-    with patch("app.agents.executor.get_llm") as mock_get:
-        mock_get.return_value = MagicMock()
+    with patch("app.agents.executor.model_gateway.is_available", return_value=True):
         res = ExecutorAgent(state)
         assert "consult" in res["generation"].lower()
 
@@ -67,10 +67,12 @@ def test_llm_agent_history_branch():
         {"role": "assistant", "content": "hello"}
     ]
     state["question"] = "fever"
-    with patch("app.agents.llm_agent.get_llm") as mock_get:
-        mock_llm = MagicMock()
-        mock_llm.invoke.return_value.content = "This is a long enough medical response for testing."
-        mock_get.return_value = mock_llm
+    with patch("app.agents.llm_agent.model_gateway.is_available", return_value=True), \
+         patch("app.agents.llm_agent.model_gateway.generate") as mock_gen:
+        mock_gen.return_value = {
+            "content": "This is a long enough medical response for testing.",
+            "model_used": "groq/openai/gpt-oss-120b", "fallback": False, "degraded": False,
+        }
         res = LLMAgent(state)
         assert res["llm_success"] is True
 
@@ -78,10 +80,9 @@ def test_llm_agent_history_branch():
 def test_llm_agent_short_response():
     state = initialize_conversation_state()
     state["question"] = "hi"
-    with patch("app.agents.llm_agent.get_llm") as mock_get:
-        mock_llm = MagicMock()
-        mock_llm.invoke.return_value.content = "short"
-        mock_get.return_value = mock_llm
+    with patch("app.agents.llm_agent.model_gateway.is_available", return_value=True), \
+         patch("app.agents.llm_agent.model_gateway.generate") as mock_gen:
+        mock_gen.return_value = {"content": "short", "model_used": "groq/openai/gpt-oss-120b", "fallback": False, "degraded": False}
         res = LLMAgent(state)
         assert res["llm_success"] is False
 

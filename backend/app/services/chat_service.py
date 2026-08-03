@@ -81,10 +81,10 @@ class ChatService:
 
         cached = cache.get_answer(message)
         if cached is not None:
-            response_text, source, figures_removed = cached
+            response_text, source, figures_removed, model_used, model_fallback = cached
             db_service.save_message(session_id, "assistant", response_text, source)
             self._record_audit(
-                session_id, source=source, figures_removed_count=len(figures_removed),
+                session_id, source=source, figures_removed_count=len(figures_removed), model_used=model_used,
                 cache_hit=True, latency_ms=(time.monotonic() - started) * 1000,
             )
             return {
@@ -93,7 +93,10 @@ class ChatService:
                 "timestamp": datetime.now().strftime("%I:%M %p"),
                 "success": True,
                 "disclaimer": safety["disclaimer"],
-                "safety": {"blocked": False, "category": None, "refused_topic": None, "figures_removed": figures_removed},
+                "safety": {
+                    "blocked": False, "category": None, "refused_topic": None, "figures_removed": figures_removed,
+                    "model_used": model_used, "model_fallback": model_fallback,
+                },
             }
 
         # Initialize or retrieve conversation state
@@ -121,15 +124,20 @@ class ChatService:
         if figures_removed:
             logger.warning("dosage_grounding: stripped %d ungrounded figure(s)", len(figures_removed))
 
-        cache.set_answer(message, (response_text, source, figures_removed))
+        model_used = result.get("model_used")
+        model_fallback = bool(result.get("model_fallback"))
+
+        cache.set_answer(message, (response_text, source, figures_removed, model_used, model_fallback))
 
         # "System Message" means every real source failed and a static fallback was used instead
         degraded = source == "System Message" or not result.get("generation")
+        if model_fallback:
+            logger.warning("model_gateway: answer served by fallback model %s", model_used)
 
         # Persist assistant response
         db_service.save_message(session_id, "assistant", response_text, source)
         self._record_audit(
-            session_id, source=source, figures_removed_count=len(figures_removed),
+            session_id, source=source, figures_removed_count=len(figures_removed), model_used=model_used,
             degraded=degraded, latency_ms=(time.monotonic() - started) * 1000,
         )
 
@@ -139,7 +147,10 @@ class ChatService:
             "timestamp": datetime.now().strftime("%I:%M %p"),
             "success": bool(result.get("generation")),
             "disclaimer": safety["disclaimer"],
-            "safety": {"blocked": False, "category": None, "refused_topic": None, "figures_removed": figures_removed},
+            "safety": {
+                "blocked": False, "category": None, "refused_topic": None, "figures_removed": figures_removed,
+                "model_used": model_used, "model_fallback": model_fallback,
+            },
         }
 
     def clear_conversation(self, session_id: str) -> None:
