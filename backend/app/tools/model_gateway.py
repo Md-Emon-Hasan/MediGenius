@@ -7,16 +7,15 @@ tiered by task so routing/classification calls don't pay for the largest model.
 
 import litellm
 
-from app.core.config import GROQ_API_KEY
+from app.core.config import (
+    CLASSIFICATION_MODEL,
+    GROQ_API_KEY,
+    REASONING_MODEL,
+    SYNTHESIS_MODEL,
+)
 from app.core.logging_config import logger
 
 litellm.suppress_debug_info = True
-
-# llama-3.1-8b-instant and llama-3.3-70b-versatile are deprecated on Groq (shutdown 2026-08-16);
-# these are their vendor-recommended replacements — re-verify at console.groq.com/docs/models before changing
-SYNTHESIS_MODEL = "groq/openai/gpt-oss-120b"
-REASONING_MODEL = "groq/openai/gpt-oss-120b"
-CLASSIFICATION_MODEL = "groq/openai/gpt-oss-20b"
 
 TIER_MODELS = {
     "synthesis": SYNTHESIS_MODEL,

@@ -31,3 +31,10 @@ RATE_LIMIT = os.getenv("RATE_LIMIT", "20/minute")
 # ── Memory ─────────────────────────────────────────────────────────────────────
 # caps how many recalled exchanges get injected into a prompt — unbounded recall quietly inflates every prompt
 MAX_RECALLED_MEMORIES = int(os.getenv("MAX_RECALLED_MEMORIES", "3"))
+
+# ── Model Gateway ──────────────────────────────────────────────────────────────
+# llama-3.1-8b-instant and llama-3.3-70b-versatile are deprecated on Groq (shutdown 2026-08-16);
+# these defaults are their vendor-recommended replacements — re-verify at console.groq.com/docs/models
+SYNTHESIS_MODEL = os.getenv("SYNTHESIS_MODEL", "groq/openai/gpt-oss-120b")
+REASONING_MODEL = os.getenv("REASONING_MODEL", "groq/openai/gpt-oss-120b")
+CLASSIFICATION_MODEL = os.getenv("CLASSIFICATION_MODEL", "groq/openai/gpt-oss-20b")

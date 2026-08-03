@@ -19,7 +19,7 @@ RXNAV_TIMEOUT = 3.0
 
 _STOPWORDS = {
     "can", "i", "take", "with", "and", "or", "the", "a", "an", "is", "it", "safe", "to", "does",
-    "have", "interaction", "interactions", "between", "my", "for", "of", "drug", "drugs",
+    "have", "interact", "interaction", "interactions", "between", "my", "for", "of", "drug", "drugs",
     "medication", "medicine", "combine", "mix", "together", "this", "that", "are", "will",
 }
 
