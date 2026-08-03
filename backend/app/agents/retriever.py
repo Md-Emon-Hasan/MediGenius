@@ -3,6 +3,7 @@ MediGenius — agents/retriever.py
 RetrieverAgent: retrieves relevant documents from the vector store (RAG).
 """
 
+from app.core import cache
 from app.core.logging_config import logger
 from app.core.state import AgentState
 from app.tools.vector_store import get_retriever
@@ -27,7 +28,12 @@ def RetrieverAgent(state: AgentState) -> AgentState:
     context = " | ".join(context_parts)
     combined_query = f"{state['question']} {context}" if context else state["question"]
 
-    docs = retriever.invoke(combined_query)
+    cached_docs = cache.get_retrieval(combined_query)
+    if cached_docs is not None:
+        docs = cached_docs
+    else:
+        docs = retriever.invoke(combined_query)
+        cache.set_retrieval(combined_query, docs)
     valid_docs = [d for d in docs if len(d.page_content.strip()) > 50] if docs else []
 
     if valid_docs:

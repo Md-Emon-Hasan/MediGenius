@@ -46,6 +46,60 @@ class TestChatService:
             assert result["source"] == "Test Source"
 
     @pytest.mark.asyncio
+    async def test_process_message_crisis_bypasses_workflow(self):
+        service = ChatService()
+        service.workflow_app = MagicMock()
+        service.workflow_app.ainvoke = AsyncMock(return_value={"generation": "should not be used"})
+        from app.services import db_service
+        with patch.object(db_service, 'save_message'):
+            result = await service.process_message("test-session", "I want to kill myself")
+            assert result["safety"]["blocked"] is True
+            assert result["safety"]["category"] == "crisis"
+            assert result["disclaimer"] is None
+            service.workflow_app.ainvoke.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_process_message_normal_has_disclaimer(self):
+        service = ChatService()
+        service.workflow_app = MagicMock()
+        service.workflow_app.ainvoke = AsyncMock(return_value={
+            "generation": "Test response",
+            "source": "Test Source"
+        })
+        from app.services import db_service
+        with patch.object(db_service, 'save_message'):
+            result = await service.process_message("test-session", "What is diabetes?")
+            assert result["safety"]["blocked"] is False
+            assert result["disclaimer"]
+
+    @pytest.mark.asyncio
+    async def test_process_message_refused_topic_bypasses_workflow(self):
+        service = ChatService()
+        service.workflow_app = MagicMock()
+        service.workflow_app.ainvoke = AsyncMock(return_value={"generation": "should not be used"})
+        from app.services import db_service
+        with patch.object(db_service, 'save_message'):
+            result = await service.process_message("test-session", "what is the dose of paracetamol for my baby")
+            assert result["safety"]["refused_topic"] == "pediatric_dosing"
+            service.workflow_app.ainvoke.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_process_message_strips_ungrounded_figure(self):
+        from langchain_core.documents import Document
+        service = ChatService()
+        service.workflow_app = MagicMock()
+        service.workflow_app.ainvoke = AsyncMock(return_value={
+            "generation": "Take 999mg every 2 hours.",
+            "source": "Test Source",
+            "documents": [Document(page_content="General information about pain relief.")],
+        })
+        from app.services import db_service
+        with patch.object(db_service, 'save_message'):
+            result = await service.process_message("test-session", "what helps with a headache")
+            assert "999mg" not in result["response"]
+            assert len(result["safety"]["figures_removed"]) > 0
+
+    @pytest.mark.asyncio
     async def test_process_message_no_workflow(self):
         service = ChatService()
         with pytest.raises(ValueError, match="Workflow not initialized"):

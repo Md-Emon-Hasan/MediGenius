@@ -43,6 +43,7 @@ def mock_dependencies():
          patch.object(chat_service, 'initialize_workflow'), \
          patch.object(chat_service, 'workflow_app', mock_app_instance), \
          patch.object(db_service, 'save_message') as mock_save, \
+         patch.object(db_service, 'save_audit_log') as mock_audit, \
          patch('app.main.process_pdf') as mock_pdf, \
          patch('app.main.get_or_create_vectorstore') as mock_vs:
 
@@ -54,6 +55,7 @@ def mock_dependencies():
             "vector_store": mock_vs,
             "workflow_app": mock_app_instance,
             "save_message": mock_save,
+            "save_audit_log": mock_audit,
         }
 
 
@@ -61,3 +63,14 @@ def mock_dependencies():
 def mock_session_middleware():
     """Mock session middleware behavior"""
     pass
+
+
+@pytest.fixture(autouse=True)
+def _clear_caches():
+    """The answer/retrieval caches are module-level singletons — reset between tests to avoid cross-test bleed"""
+    from app.core import cache
+    cache._answer_cache.clear()
+    cache._retrieval_cache.clear()
+    yield
+    cache._answer_cache.clear()
+    cache._retrieval_cache.clear()

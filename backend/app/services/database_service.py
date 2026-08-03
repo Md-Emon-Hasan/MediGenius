@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 
 from app.core.logging_config import logger
 from app.db.session import SessionLocal, engine
+from app.models.audit_log import AuditLog
 from app.models.message import Base, Message
 
 
@@ -87,6 +88,11 @@ class DatabaseService:
         logger.info("Deleting session %s...", session_id[:8])
         with self.get_session() as session:
             session.execute(delete(Message).where(Message.session_id == session_id))
+            session.commit()
+
+    def save_audit_log(self, session_id: str, **fields) -> None:
+        with self.get_session() as session:
+            session.add(AuditLog(session_id=session_id, **fields))
             session.commit()
 
 

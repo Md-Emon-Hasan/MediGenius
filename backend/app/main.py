@@ -21,11 +21,14 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 from starlette.middleware.sessions import SessionMiddleware
 
 from app.api.v1.api import api_router
 from app.core.config import CHAT_DB_PATH, PDF_PATH, VECTOR_STORE_DIR
 from app.core.logging_config import logger
+from app.core.rate_limit import limiter
 from app.services.chat_service import chat_service
 from app.services.database_service import db_service
 from app.tools.pdf_loader import process_pdf
@@ -73,6 +76,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 app.add_middleware(SessionMiddleware, secret_key=secrets.token_hex(32))
+
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # Register all API routes
 app.include_router(api_router)

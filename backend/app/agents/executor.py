@@ -3,6 +3,7 @@ MediGenius — agents/executor.py
 ExecutorAgent: synthesizes the final response using the LLM and gathered context.
 """
 
+from app.core import safety_router
 from app.core.logging_config import logger
 from app.core.state import AgentState
 from app.tools.llm_client import get_llm
@@ -31,7 +32,7 @@ def ExecutorAgent(state: AgentState) -> AgentState:
 
     elif state.get("documents") and len(state["documents"]) > 0:
         content = "\n\n".join(
-            [doc.page_content[:1000] for doc in state["documents"][:3]]
+            [safety_router.sanitize_external_text(doc.page_content[:1000]) for doc in state["documents"][:3]]
         )
         prompt = (
             "You are an experienced medical doctor providing helpful consultation.\n\n"

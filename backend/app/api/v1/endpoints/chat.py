@@ -7,6 +7,8 @@ import uuid
 
 from fastapi import APIRouter, HTTPException, Request
 
+from app.core.config import RATE_LIMIT
+from app.core.rate_limit import limiter
 from app.schemas.chat import ChatRequest, ChatResponse
 from app.services.chat_service import chat_service
 
@@ -24,12 +26,13 @@ def _get_session_id(request: Request) -> str:
 
 
 @router.post("/chat", response_model=ChatResponse)
-async def chat_endpoint(request: ChatRequest, req: Request):
+@limiter.limit(RATE_LIMIT)
+async def chat_endpoint(payload: ChatRequest, request: Request):
     """Process a user message through the agentic pipeline."""
     if not chat_service.workflow_app:
         raise HTTPException(status_code=503, detail="System not initialized")
-    session_id = _get_session_id(req)
-    return await chat_service.process_message(session_id, request.message)
+    session_id = _get_session_id(request)
+    return await chat_service.process_message(session_id, payload.message)
 
 
 @router.post("/clear")

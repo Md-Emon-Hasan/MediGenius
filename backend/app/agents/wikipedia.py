@@ -5,6 +5,7 @@ WikipediaAgent: searches Wikipedia for medical information.
 
 from langchain_core.documents import Document
 
+from app.core import cache
 from app.core.logging_config import logger
 from app.core.state import AgentState
 from app.tools.wikipedia_search import get_wikipedia_wrapper
@@ -20,7 +21,10 @@ def WikipediaAgent(state: AgentState) -> AgentState:
         return state
 
     search_query = f"{state['question']} medical symptoms treatment"
-    content = wiki.run(search_query)
+    content = cache.get_retrieval(search_query)
+    if content is None:
+        content = wiki.run(search_query)
+        cache.set_retrieval(search_query, content)
 
     # Retry with raw question if first search is too short
     if not content or len(content.strip()) < 100:

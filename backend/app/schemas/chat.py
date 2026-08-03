@@ -3,6 +3,8 @@ MediGenius — schemas/chat.py
 Pydantic schemas for chat request and response.
 """
 
+from typing import Optional
+
 from pydantic import BaseModel
 
 
@@ -15,3 +17,5 @@ class ChatResponse(BaseModel):
     source: str
     timestamp: str
     success: bool
+    disclaimer: Optional[str] = None
+    safety: Optional[dict] = None

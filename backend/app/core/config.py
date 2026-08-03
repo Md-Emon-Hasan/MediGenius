@@ -22,3 +22,8 @@ PDF_PATH = os.getenv("PDF_PATH", os.path.join(_BACKEND_DIR, "data", "medical_boo
 # ── API Keys ───────────────────────────────────────────────────────────────────
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 TAVILY_API_KEY = os.getenv("TAVILY_API_KEY")
+
+# ── Rate Limiting ──────────────────────────────────────────────────────────────
+# protects Groq/Tavily quota and avoids tripping DuckDuckGo's IP-block threshold
+RATE_LIMIT_ENABLED = os.getenv("RATE_LIMIT_ENABLED", "1") == "1"
+RATE_LIMIT = os.getenv("RATE_LIMIT", "20/minute")
