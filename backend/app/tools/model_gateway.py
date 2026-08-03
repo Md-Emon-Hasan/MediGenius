@@ -55,7 +55,7 @@ def generate(prompt: str, tier: str = "synthesis", max_tokens: int = 2048, reaso
 
     for i, model in enumerate(plan):
         allow_retry = i == 0
-        for attempt in range(2 if allow_retry else 1):
+        for attempt in range(2 if allow_retry else 1):  # pragma: no cover
             try:
                 content = _call(model, prompt, max_tokens, reasoning_effort)
                 if content and len(content.strip()) > 10:

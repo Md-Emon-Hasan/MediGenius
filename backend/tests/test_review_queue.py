@@ -37,6 +37,13 @@ def setup_teardown_db():
             pass
 
 
+def test_migration_noop_when_table_does_not_exist_yet(setup_teardown_db):
+    service = setup_teardown_db
+    with service.engine.begin() as conn:
+        conn.execute(text("DROP TABLE audit_log"))
+    service._migrate_audit_log_columns()  # should not raise, nothing to migrate
+
+
 def test_migration_adds_missing_columns_without_dropping_data(setup_teardown_db):
     service = setup_teardown_db
     with service.engine.begin() as conn:

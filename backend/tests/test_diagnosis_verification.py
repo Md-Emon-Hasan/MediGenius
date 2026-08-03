@@ -112,6 +112,26 @@ def test_medium_risk_needs_revision_triggers_one_revision_call():
         assert mock_gen.call_count == 2  # one verify + one revision, no re-verification
 
 
+def test_revision_call_degraded_keeps_original_answer():
+    state = _state_with_answer(
+        "Take it twice a day for best results.",
+        documents=[Document(page_content="This medication is generally taken with food.")],
+    )
+    with patch("app.agents.diagnosis_verification_sub_agent.model_gateway.is_available", return_value=True), \
+         patch("app.agents.diagnosis_verification_sub_agent.model_gateway.generate") as mock_gen:
+        mock_gen.side_effect = [
+            {
+                "content": ('{"grounded": false, "citations_valid": false, '
+                            '"unsupported_claims": ["twice a day"], "risk": "medium", "needs_revision": true}'),
+                "model_used": "groq/openai/gpt-oss-120b", "fallback": False, "degraded": False,
+            },
+            {"content": None, "model_used": None, "fallback": False, "degraded": True},
+        ]
+        res = DiagnosisVerificationSubAgent(state)
+        assert res["generation"] == "Take it twice a day for best results."
+        assert mock_gen.call_count == 2
+
+
 def test_malformed_json_fails_closed_to_high_risk():
     state = _state_with_answer("Some answer.", documents=[Document(page_content="evidence")])
     with patch("app.agents.diagnosis_verification_sub_agent.model_gateway.is_available", return_value=True), \

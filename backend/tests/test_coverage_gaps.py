@@ -96,6 +96,13 @@ def test_get_session_id_no_header():
     assert mock_request.session["session_id"] == sid
 
 
+def test_get_session_id_existing_cookie_session():
+    mock_request = MagicMock(spec=Request)
+    mock_request.headers = {}
+    mock_request.session = {"session_id": "already-set"}
+    assert _get_session_id(mock_request) == "already-set"
+
+
 def test_session_endpoints_coverage():
     from app.api.v1.endpoints.session import _get_session_id as _get_sid_s
     mock_request = MagicMock(spec=Request)
@@ -103,6 +110,11 @@ def test_session_endpoints_coverage():
     mock_request.session = {}
     sid = _get_sid_s(mock_request)
     assert sid is not None
+
+    mock_request_existing = MagicMock(spec=Request)
+    mock_request_existing.headers = {}
+    mock_request_existing.session = {"session_id": "already-set"}
+    assert _get_sid_s(mock_request_existing) == "already-set"
 
     with patch("app.api.v1.endpoints.session.db_service") as mock_db:
         mock_db.get_all_sessions.return_value = []

@@ -12,7 +12,7 @@ from logging.handlers import RotatingFileHandler
 from app.core.config import LOG_DIR
 
 
-def setup_logging(log_dir: str = LOG_DIR) -> logging.Logger:
+def setup_logging(log_dir: str = LOG_DIR, is_testing: bool = None) -> logging.Logger:
     """Setup rotating file + console logging. Returns the 'medigenius' logger."""
     _logger = logging.getLogger("medigenius")
 
@@ -21,7 +21,8 @@ def setup_logging(log_dir: str = LOG_DIR) -> logging.Logger:
         return _logger
 
     # Skip file logging if in test environment
-    is_testing = "pytest" in sys.modules or os.getenv("TESTING") == "1"
+    if is_testing is None:
+        is_testing = "pytest" in sys.modules or os.getenv("TESTING") == "1"
 
     if is_testing:
         _logger.setLevel(logging.DEBUG)

@@ -37,6 +37,27 @@ class TestChatService:
             assert service.workflow_app is not None
             mock_create.assert_called_once()
 
+    def test_initialize_workflow_is_noop_when_already_set(self):
+        service = ChatService()
+        service.workflow_app = MagicMock()
+        import sys
+        chat_module = sys.modules['app.services.chat_service']
+        with patch.object(chat_module, 'create_workflow') as mock_create:
+            service.initialize_workflow()
+            mock_create.assert_not_called()
+
+    def test_record_audit_exception_is_swallowed(self):
+        service = ChatService()
+        from app.services import db_service
+        with patch.object(db_service, 'save_audit_log', side_effect=Exception("db down")):
+            service._record_audit("test-session", source="x")  # should not raise
+
+    def test_rehydrate_history_exception_returns_empty(self):
+        service = ChatService()
+        from app.services import db_service
+        with patch.object(db_service, 'get_chat_history', side_effect=Exception("db down")):
+            assert service._rehydrate_history("test-session") == []
+
     @pytest.mark.asyncio
     async def test_process_message_success(self):
         service = ChatService()
@@ -159,6 +180,59 @@ class TestChatService:
             mock_recall.assert_not_called()
             mock_add.assert_not_called()
             service.workflow_app.ainvoke.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_process_message_drug_interaction_refusal(self):
+        service = ChatService()
+        service.workflow_app = MagicMock()
+        service.workflow_app.ainvoke = AsyncMock(return_value={"generation": "should not be used"})
+        from app.services import db_service
+        with patch.object(db_service, 'save_message'):
+            result = await service.process_message("test-session", "does ibuprofen interact with warfarin")
+            assert result["safety"]["refused_topic"] == "drug_interaction"
+            assert "pharmacist" in result["response"].lower() or "doctor" in result["response"].lower()
+            service.workflow_app.ainvoke.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_process_message_serves_from_cache(self):
+        service = ChatService()
+        service.workflow_app = MagicMock()
+        service.workflow_app.ainvoke = AsyncMock(return_value={"generation": "should not be used"})
+        from app.core import cache
+        from app.services import db_service
+        cache.set_answer(
+            "what is diabetes",
+            ("cached answer", "Medical Literature Database", [], "groq/openai/gpt-oss-120b", False, {"risk": "low"}),
+        )
+        with patch.object(db_service, 'save_message'):
+            result = await service.process_message("test-session", "what is diabetes")
+            assert result["response"] == "cached answer"
+            assert result["verification"] == {"risk": "low"}
+            service.workflow_app.ainvoke.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_process_message_reuses_existing_conversation_state(self):
+        service = ChatService()
+        service.workflow_app = MagicMock()
+        service.workflow_app.ainvoke = AsyncMock(return_value={"generation": "Test response", "source": "Test Source"})
+        from app.services import db_service
+        with patch.object(db_service, 'save_message'), patch.object(db_service, 'get_chat_history') as mock_history:
+            await service.process_message("test-session", "first message")
+            await service.process_message("test-session", "second message")
+            mock_history.assert_called_once()  # rehydration only happens on the cold-start message
+
+    @pytest.mark.asyncio
+    async def test_process_message_logs_model_fallback(self):
+        service = ChatService()
+        service.workflow_app = MagicMock()
+        service.workflow_app.ainvoke = AsyncMock(return_value={
+            "generation": "Test response", "source": "Test Source",
+            "model_used": "groq/openai/gpt-oss-20b", "model_fallback": True,
+        })
+        from app.services import db_service
+        with patch.object(db_service, 'save_message'):
+            result = await service.process_message("test-session", "what is diabetes")
+            assert result["safety"]["model_fallback"] is True
 
     @pytest.mark.asyncio
     async def test_process_message_no_workflow(self):

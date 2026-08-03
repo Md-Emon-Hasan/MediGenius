@@ -2,6 +2,7 @@
 import logging
 import os
 import sys
+from unittest.mock import MagicMock, patch
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
@@ -34,3 +35,35 @@ def test_logger_has_handlers():
 def test_logger_level():
     # In pytest env, level is set to DEBUG
     assert logger.level == logging.DEBUG
+
+
+def test_setup_logging_production_branch_creates_file_handler():
+    medigenius_logger = logging.getLogger("medigenius")
+    saved_handlers = medigenius_logger.handlers[:]
+    medigenius_logger.handlers = []
+    try:
+        with patch("os.path.exists", return_value=False), \
+             patch("os.makedirs") as mock_makedirs, \
+             patch("app.core.logging_config.RotatingFileHandler") as mock_handler_cls:
+            mock_handler_cls.return_value = MagicMock()
+            result = setup_logging(log_dir="fake_prod_logs", is_testing=False)
+            mock_makedirs.assert_called_once_with("fake_prod_logs")
+            mock_handler_cls.assert_called_once()
+            assert result.level == logging.INFO
+    finally:
+        medigenius_logger.handlers = saved_handlers
+
+
+def test_setup_logging_production_branch_skips_makedirs_if_dir_exists():
+    medigenius_logger = logging.getLogger("medigenius")
+    saved_handlers = medigenius_logger.handlers[:]
+    medigenius_logger.handlers = []
+    try:
+        with patch("os.path.exists", return_value=True), \
+             patch("os.makedirs") as mock_makedirs, \
+             patch("app.core.logging_config.RotatingFileHandler") as mock_handler_cls:
+            mock_handler_cls.return_value = MagicMock()
+            setup_logging(log_dir="fake_prod_logs", is_testing=False)
+            mock_makedirs.assert_not_called()
+    finally:
+        medigenius_logger.handlers = saved_handlers

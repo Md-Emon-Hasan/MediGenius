@@ -67,6 +67,19 @@ def test_retriever_agent_no_tool():
         assert new_state["rag_success"] is False
 
 
+def test_retriever_agent_uses_cached_retrieval():
+    state = initialize_conversation_state()
+    state["question"] = "fever"
+    mock_retriever = MagicMock()
+    with patch('app.agents.retriever.get_retriever', return_value=mock_retriever), \
+         patch('app.agents.retriever.cache.get_retrieval', return_value=[Document(page_content="cached " * 20)]), \
+         patch('app.agents.retriever.cache.set_retrieval') as mock_set:
+        new_state = RetrieverAgent(state)
+        assert new_state["rag_success"] is True
+        mock_retriever.invoke.assert_not_called()
+        mock_set.assert_not_called()
+
+
 # --- LLM Agent Tests ---
 def test_llm_agent():
     state = initialize_conversation_state()
@@ -88,6 +101,20 @@ def test_llm_agent_no_tool():
         new_state = LLMAgent(state)
         assert new_state["llm_success"] is False
         assert "unavailable" in new_state["generation"]
+
+
+def test_llm_agent_history_with_unrecognized_role_is_skipped():
+    state = initialize_conversation_state()
+    state["question"] = "Hi"
+    state["conversation_history"] = [{"role": "system", "content": "irrelevant"}]
+    with patch('app.agents.llm_agent.model_gateway.is_available', return_value=True), \
+         patch('app.agents.llm_agent.model_gateway.generate') as mock_gen:
+        mock_gen.return_value = {
+            "content": "Hello there my friend, this is a long enough response.",
+            "model_used": "groq/openai/gpt-oss-120b", "fallback": False, "degraded": False,
+        }
+        new_state = LLMAgent(state)
+        assert new_state["llm_success"] is True
 
 
 # --- Wikipedia Agent Tests ---
@@ -117,6 +144,17 @@ def test_wikipedia_agent_short_content():
         mock_get.return_value = mock_wiki
         new_state = WikipediaAgent(state)
         assert new_state["wiki_success"] is False
+
+
+def test_wikipedia_agent_uses_cached_result():
+    state = initialize_conversation_state()
+    state["question"] = "Flu"
+    mock_wiki = MagicMock()
+    with patch('app.agents.wikipedia.get_wikipedia_wrapper', return_value=mock_wiki), \
+         patch('app.agents.wikipedia.cache.get_retrieval', return_value="cached " * 30):
+        new_state = WikipediaAgent(state)
+        assert new_state["wiki_success"] is True
+        mock_wiki.run.assert_not_called()
 
 
 # --- Tavily Agent Tests ---
@@ -208,6 +246,15 @@ def test_executor_agent_with_docs():
 
         assert new_state["generation"] == "X is likely Y based on docs."
         assert len(new_state["conversation_history"]) == 2  # user + assistant
+
+
+def test_executor_agent_history_with_unrecognized_role_is_skipped():
+    state = initialize_conversation_state()
+    state["question"] = "What is X?"
+    state["conversation_history"] = [{"role": "system", "content": "irrelevant"}]
+    with patch('app.agents.executor.model_gateway.is_available', return_value=False):
+        new_state = ExecutorAgent(state)
+        assert "unavailable" in new_state["generation"]
 
 
 def test_executor_agent_no_llm():

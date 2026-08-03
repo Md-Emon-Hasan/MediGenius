@@ -37,6 +37,7 @@ def test_get_llm_with_key():
             mock_groq.return_value = MagicMock()
             result = get_llm()
             assert result is not None
+            assert get_llm() is result  # singleton — second call skips re-init
     llm_module._llm_instance = None  # reset
 
 
@@ -67,6 +68,7 @@ def test_get_tavily_with_key():
             mock_tav.return_value = MagicMock()
             result = get_tavily_search()
             assert result is not None
+            assert get_tavily_search() is result  # singleton — second call skips re-init
     tavily_module._tavily_search = None  # reset
 
 
@@ -100,6 +102,7 @@ def test_get_duckduckgo_success():
         mock_ddg.return_value = MagicMock()
         res = get_duckduckgo_search()
         assert res is not None
+        assert get_duckduckgo_search() is res  # singleton — second call skips re-init
     ddg_module._ddg_search = None
 
 
