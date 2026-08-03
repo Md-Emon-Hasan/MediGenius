@@ -27,3 +27,7 @@ TAVILY_API_KEY = os.getenv("TAVILY_API_KEY")
 # protects Groq/Tavily quota and avoids tripping DuckDuckGo's IP-block threshold
 RATE_LIMIT_ENABLED = os.getenv("RATE_LIMIT_ENABLED", "1") == "1"
 RATE_LIMIT = os.getenv("RATE_LIMIT", "20/minute")
+
+# ── Memory ─────────────────────────────────────────────────────────────────────
+# caps how many recalled exchanges get injected into a prompt — unbounded recall quietly inflates every prompt
+MAX_RECALLED_MEMORIES = int(os.getenv("MAX_RECALLED_MEMORIES", "3"))

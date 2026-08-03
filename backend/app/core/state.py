@@ -33,6 +33,8 @@ class AgentState(TypedDict):
     needs_symptom_analysis: bool
     symptom_summary: Optional[Dict]
     evidence_text: Optional[str]
+    session_id: Optional[str]
+    recalled_memories: List[str]
 
 
 def initialize_conversation_state() -> AgentState:
@@ -60,6 +62,8 @@ def initialize_conversation_state() -> AgentState:
         "needs_symptom_analysis": False,
         "symptom_summary": None,
         "evidence_text": None,
+        "session_id": None,
+        "recalled_memories": [],
     }
 
 
@@ -88,6 +92,7 @@ def reset_query_state(state: AgentState) -> AgentState:
             "needs_symptom_analysis": False,
             "symptom_summary": None,
             "evidence_text": None,
+            "recalled_memories": [],
         }
     )
     return state

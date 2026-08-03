@@ -12,6 +12,7 @@ from app.core.logging_config import logger
 from app.db.session import SessionLocal, engine
 from app.models.audit_log import AuditLog
 from app.models.message import Base, Message
+from app.tools import memory_store
 
 
 class DatabaseService:
@@ -89,6 +90,7 @@ class DatabaseService:
         with self.get_session() as session:
             session.execute(delete(Message).where(Message.session_id == session_id))
             session.commit()
+        memory_store.delete_session_memory(session_id)
 
     def save_audit_log(self, session_id: str, **fields) -> None:
         with self.get_session() as session:

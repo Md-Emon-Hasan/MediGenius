@@ -3,6 +3,7 @@ MediGenius — agents/llm_agent.py
 LLMAgent: generates a direct response from the LLM without RAG.
 """
 
+from app.agents.memory import format_recalled_memories
 from app.agents.symptom_analysis_sub_agent import format_symptom_context
 from app.core.logging_config import logger
 from app.core.state import AgentState
@@ -29,7 +30,8 @@ def LLMAgent(state: AgentState) -> AgentState:
         "You are a compassionate and knowledgeable medical AI assistant helping a patient.\n\n"
         f"Conversation History:\n{history_context}\n"
         f"Current Patient Question:\n{state['question']}\n"
-        f"{format_symptom_context(state)}\n"
+        f"{format_symptom_context(state)}"
+        f"{format_recalled_memories(state)}\n"
         "Provide a helpful medical response in 2-3 sentences. Be clear, professional, and caring."
     )
 

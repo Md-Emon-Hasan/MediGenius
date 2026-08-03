@@ -39,11 +39,12 @@ def test_chat_flow_success(test_client, mock_dependencies):
     response = test_client.post("/api/v1/new-chat")
     session_id = response.json()["session_id"]
 
-    chat_response = test_client.post(
-        "/api/v1/chat",
-        json={"message": "Hello AI"},
-        headers={"X-Session-ID": session_id}
-    )
+    with patch("app.services.chat_service.memory_store.add_exchange"):
+        chat_response = test_client.post(
+            "/api/v1/chat",
+            json={"message": "Hello AI"},
+            headers={"X-Session-ID": session_id}
+        )
 
     assert chat_response.status_code == 200
     data = chat_response.json()

@@ -1,6 +1,7 @@
 """Tests for database service — Deep Modular Architecture"""
 import os
 import sys
+from unittest.mock import patch
 
 import pytest
 
@@ -70,5 +71,6 @@ def test_delete_session(setup_teardown_db):
     db.save_message("sess_to_del", "user", "delete me")
     assert len(db.get_chat_history("sess_to_del")) == 1
 
-    db.delete_session("sess_to_del")
+    with patch("app.services.database_service.memory_store.delete_session_memory"):
+        db.delete_session("sess_to_del")
     assert len(db.get_chat_history("sess_to_del")) == 0

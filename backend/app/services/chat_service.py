@@ -13,6 +13,7 @@ from app.core.langgraph_workflow import create_workflow
 from app.core.logging_config import logger
 from app.core.state import initialize_conversation_state, reset_query_state
 from app.services.database_service import db_service
+from app.tools import memory_store
 
 
 class ChatService:
@@ -36,6 +37,15 @@ class ChatService:
             db_service.save_audit_log(session_id, **fields)
         except Exception:
             logger.error("Audit log write failed", exc_info=True)
+
+    def _rehydrate_history(self, session_id: str) -> list:
+        """Reload persisted messages so a session survives a process restart."""
+        try:
+            history = db_service.get_chat_history(session_id)
+        except Exception:
+            logger.error("Failed to load persisted history for session %s", session_id[:8], exc_info=True)
+            return []
+        return [{"role": m["role"], "content": m["content"], "source": m.get("source")} for m in history[-20:]]
 
     async def process_message(self, session_id: str, message: str) -> Dict[str, Any]:
         """Run the agentic pipeline for a single user message."""
@@ -110,13 +120,16 @@ class ChatService:
                 "symptom_summary": None,
             }
 
-        # Initialize or retrieve conversation state
+        # Initialize or retrieve conversation state — rehydrate from SQLite on a cold start
         if session_id not in self.conversation_states:
-            self.conversation_states[session_id] = initialize_conversation_state()
+            state = initialize_conversation_state()
+            state["conversation_history"] = self._rehydrate_history(session_id)
+            self.conversation_states[session_id] = state
 
         state = self.conversation_states[session_id]
         state = reset_query_state(state)
         state["question"] = message
+        state["session_id"] = session_id
 
         # Run workflow (async preferred, sync fallback)
         try:
@@ -145,6 +158,9 @@ class ChatService:
         degraded = source in ("System Message", "Safety Router") or not result.get("generation")
         if model_fallback:
             logger.warning("model_gateway: answer served by fallback model %s", model_used)
+
+        if not degraded:
+            memory_store.add_exchange(session_id, message, response_text)
 
         # Persist assistant response
         db_service.save_message(session_id, "assistant", response_text, source)

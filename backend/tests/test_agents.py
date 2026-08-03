@@ -161,6 +161,37 @@ def test_memory_agent():
     assert new_state["conversation_history"][-1]["content"] == "24"
 
 
+def test_memory_agent_no_session_id_skips_recall():
+    state = initialize_conversation_state()
+    state["question"] = "what is fever"
+    new_state = MemoryAgent(state)
+    assert new_state["recalled_memories"] == []
+
+
+def test_memory_agent_recalls_for_session():
+    state = initialize_conversation_state()
+    state["session_id"] = "sess-1"
+    state["question"] = "what is fever"
+    with patch("app.agents.memory.memory_store.recall", return_value=["past exchange"]) as mock_recall:
+        new_state = MemoryAgent(state)
+        assert new_state["recalled_memories"] == ["past exchange"]
+        mock_recall.assert_called_once_with("sess-1", "what is fever", k=3)
+
+
+def test_format_recalled_memories_empty():
+    from app.agents.memory import format_recalled_memories
+    state = initialize_conversation_state()
+    assert format_recalled_memories(state) == ""
+
+
+def test_format_recalled_memories_formats_list():
+    from app.agents.memory import format_recalled_memories
+    state = initialize_conversation_state()
+    state["recalled_memories"] = ["exchange one", "exchange two"]
+    ctx = format_recalled_memories(state)
+    assert "exchange one" in ctx and "exchange two" in ctx
+
+
 # --- Executor Agent Tests ---
 def test_executor_agent_with_docs():
     state = initialize_conversation_state()

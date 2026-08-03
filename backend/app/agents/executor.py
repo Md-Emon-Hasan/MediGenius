@@ -3,6 +3,7 @@ MediGenius — agents/executor.py
 ExecutorAgent: synthesizes the final response using the LLM and gathered context.
 """
 
+from app.agents.memory import format_recalled_memories
 from app.agents.symptom_analysis_sub_agent import format_symptom_context
 from app.core import safety_router
 from app.core.logging_config import logger
@@ -44,7 +45,8 @@ def ExecutorAgent(state: AgentState) -> AgentState:
             "You are an experienced medical doctor providing helpful consultation.\n\n"
             f"Previous Conversation:\n{history_context}\n"
             f"Patient's Current Question:\n{question}\n"
-            f"{format_symptom_context(state)}\n"
+            f"{format_symptom_context(state)}"
+            f"{format_recalled_memories(state)}\n"
             f"Medical Information:\n{content}\n\n"
             "Provide a clear, caring response in 2-4 sentences. Be professional and reassuring."
         )
