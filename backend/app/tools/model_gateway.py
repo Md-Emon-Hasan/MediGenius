@@ -29,18 +29,23 @@ def is_available() -> bool:
     return bool(GROQ_API_KEY)
 
 
-def _call(model: str, prompt: str, max_tokens: int) -> str:
+def _call(model: str, prompt: str, max_tokens: int, reasoning_effort: str) -> str:
+    # gpt-oss models spend output tokens on hidden reasoning before the visible answer — a low
+    # max_tokens on a "cheap" call can truncate to nothing before any content appears, so
+    # reasoning_effort matters more here than the token count itself for short structured replies
+    kwargs = {"reasoning_effort": reasoning_effort} if reasoning_effort else {}
     response = litellm.completion(
         model=model,
         messages=[{"role": "user", "content": prompt}],
         api_key=GROQ_API_KEY,
         temperature=0.3,
         max_tokens=max_tokens,
+        **kwargs,
     )
     return response["choices"][0]["message"]["content"]
 
 
-def generate(prompt: str, tier: str = "synthesis", max_tokens: int = 2048) -> dict:
+def generate(prompt: str, tier: str = "synthesis", max_tokens: int = 2048, reasoning_effort: str = None) -> dict:
     """primary -> smaller Groq model -> degraded. Retries the same model once on a non-rate-limit error."""
     if not is_available():
         return {"content": None, "model_used": None, "fallback": False, "degraded": True}
@@ -52,7 +57,7 @@ def generate(prompt: str, tier: str = "synthesis", max_tokens: int = 2048) -> di
         allow_retry = i == 0
         for attempt in range(2 if allow_retry else 1):
             try:
-                content = _call(model, prompt, max_tokens)
+                content = _call(model, prompt, max_tokens, reasoning_effort)
                 if content and len(content.strip()) > 10:
                     return {
                         "content": content.strip(),

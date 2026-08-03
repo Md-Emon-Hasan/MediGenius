@@ -30,6 +30,9 @@ class AgentState(TypedDict):
     model_used: Optional[str]
     model_fallback: bool
     verification: Optional[Dict]
+    needs_symptom_analysis: bool
+    symptom_summary: Optional[Dict]
+    evidence_text: Optional[str]
 
 
 def initialize_conversation_state() -> AgentState:
@@ -54,6 +57,9 @@ def initialize_conversation_state() -> AgentState:
         "model_used": None,
         "model_fallback": False,
         "verification": None,
+        "needs_symptom_analysis": False,
+        "symptom_summary": None,
+        "evidence_text": None,
     }
 
 
@@ -79,6 +85,9 @@ def reset_query_state(state: AgentState) -> AgentState:
             "model_used": None,
             "model_fallback": False,
             "verification": None,
+            "needs_symptom_analysis": False,
+            "symptom_summary": None,
+            "evidence_text": None,
         }
     )
     return state

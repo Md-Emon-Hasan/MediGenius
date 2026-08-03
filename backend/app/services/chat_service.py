@@ -7,6 +7,7 @@ import time
 from datetime import datetime
 from typing import Any, Dict
 
+from app.agents.drug_interaction_sub_agent import DrugInteractionSubAgent
 from app.core import cache, dosage_grounding, safety_router
 from app.core.langgraph_workflow import create_workflow
 from app.core.logging_config import logger
@@ -61,11 +62,16 @@ class ChatService:
                 "disclaimer": None,
                 "safety": {"blocked": True, "category": safety["category"], "refused_topic": None, "figures_removed": []},
                 "verification": None,
+                "symptom_summary": None,
             }
 
         refused_topic = dosage_grounding.check_refusal(message)
         if refused_topic:
-            refusal_text = dosage_grounding.refusal_response(refused_topic)
+            if refused_topic == "drug_interaction":
+                # RxNav's interaction API is gone (NIH discontinued it 2024-01-02) — normalize names, still refer
+                refusal_text = DrugInteractionSubAgent({"question": message})["generation"]
+            else:
+                refusal_text = dosage_grounding.refusal_response(refused_topic)
             db_service.save_message(session_id, "assistant", refusal_text, "Safety Router")
             self._record_audit(
                 session_id, refused_topic=refused_topic, source="Safety Router",
@@ -79,6 +85,7 @@ class ChatService:
                 "disclaimer": safety["disclaimer"],
                 "safety": {"blocked": False, "category": None, "refused_topic": refused_topic, "figures_removed": []},
                 "verification": None,
+                "symptom_summary": None,
             }
 
         cached = cache.get_answer(message)
@@ -100,6 +107,7 @@ class ChatService:
                     "model_used": model_used, "model_fallback": model_fallback,
                 },
                 "verification": verification,
+                "symptom_summary": None,
             }
 
         # Initialize or retrieve conversation state
@@ -156,6 +164,7 @@ class ChatService:
                 "model_used": model_used, "model_fallback": model_fallback,
             },
             "verification": verification,
+            "symptom_summary": result.get("symptom_summary"),
         }
 
     def clear_conversation(self, session_id: str) -> None:

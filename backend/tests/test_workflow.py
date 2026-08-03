@@ -18,7 +18,7 @@ def test_routing_logic():
 
     # Planner routing
     state["current_tool"] = "retriever"
-    assert _route_after_planner(state) == "retriever"
+    assert _route_after_planner(state) == "parallel_retrieval"
     state["current_tool"] = "other"
     assert _route_after_planner(state) == "llm_agent"
 

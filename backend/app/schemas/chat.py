@@ -20,3 +20,4 @@ class ChatResponse(BaseModel):
     disclaimer: Optional[str] = None
     safety: Optional[dict] = None
     verification: Optional[dict] = None
+    symptom_summary: Optional[dict] = None

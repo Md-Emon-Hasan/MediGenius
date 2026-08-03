@@ -2,8 +2,10 @@
 from app.core.langgraph_workflow import (
     _route_after_llm,
     _route_after_llm_fallback,
+    _route_after_parallel_retrieval,
     _route_after_planner,
     _route_after_rag,
+    _route_after_supervisor,
     _route_after_tavily,
     _route_after_wiki,
     create_workflow,
@@ -11,8 +13,18 @@ from app.core.langgraph_workflow import (
 
 
 def test_route_after_planner():
-    assert _route_after_planner({"current_tool": "retriever"}) == "retriever"
+    assert _route_after_planner({"current_tool": "retriever"}) == "parallel_retrieval"
     assert _route_after_planner({"current_tool": "llm_agent"}) == "llm_agent"
+
+
+def test_route_after_supervisor():
+    assert _route_after_supervisor({"needs_symptom_analysis": True}) == "symptom_analysis"
+    assert _route_after_supervisor({"needs_symptom_analysis": False}) == "planner"
+
+
+def test_route_after_parallel_retrieval():
+    assert _route_after_parallel_retrieval({"rag_success": True}) == "executor"
+    assert _route_after_parallel_retrieval({"rag_success": False}) == "llm_agent"
 
 
 def test_route_after_llm():

@@ -87,3 +87,19 @@ def test_generate_classification_tier_has_no_fallback_below_it():
         model_gateway.generate("hello", tier="classification")
         # primary retried once, no lower tier to drop to
         assert mock_completion.call_count == 2
+
+
+def test_generate_forwards_reasoning_effort_when_given():
+    # gpt-oss models spend max_tokens on hidden reasoning before any visible output — omitting this
+    # for "cheap" structured-output calls was the root cause of a real truncation bug, see Phase 6 report
+    with patch('app.tools.model_gateway.GROQ_API_KEY', 'fake-key'), \
+         patch('litellm.completion', return_value=_fake_response("a real medical answer here")) as mock_completion:
+        model_gateway.generate("hello", tier="reasoning", reasoning_effort="low")
+        assert mock_completion.call_args.kwargs.get("reasoning_effort") == "low"
+
+
+def test_generate_omits_reasoning_effort_when_not_given():
+    with patch('app.tools.model_gateway.GROQ_API_KEY', 'fake-key'), \
+         patch('litellm.completion', return_value=_fake_response("a real medical answer here")) as mock_completion:
+        model_gateway.generate("hello", tier="synthesis")
+        assert "reasoning_effort" not in mock_completion.call_args.kwargs

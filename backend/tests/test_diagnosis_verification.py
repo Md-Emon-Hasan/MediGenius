@@ -34,13 +34,15 @@ def test_empty_answer_skips_verification():
     assert res["verification"] is None
 
 
-def test_no_evidence_skips_llm_and_flags_high_risk():
-    state = _state_with_answer("Take this medication as directed.", documents=[])
+def test_no_evidence_skips_verification_entirely():
+    # no documents means no retrieval claim was made — this is the ordinary direct-LLM-knowledge
+    # path (source "AI Medical Knowledge"), not an ungrounded RAG answer, so nothing to verify
+    state = _state_with_answer("Take this medication as directed.", documents=[], source="AI Medical Knowledge")
     with patch("app.agents.diagnosis_verification_sub_agent.model_gateway.generate") as mock_gen:
         res = DiagnosisVerificationSubAgent(state)
         mock_gen.assert_not_called()
-        assert res["verification"]["risk"] == "high"
-        assert res["verification"]["grounded"] is False
+        assert res["verification"] is None
+        assert res["generation"] == "Take this medication as directed."
 
 
 def test_gateway_unavailable_skips_llm():
