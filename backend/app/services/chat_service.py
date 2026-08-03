@@ -104,6 +104,7 @@ class ChatService:
             db_service.save_message(session_id, "assistant", response_text, source)
             self._record_audit(
                 session_id, source=source, figures_removed_count=len(figures_removed), model_used=model_used,
+                model_fallback=model_fallback, verification_risk=(verification or {}).get("risk"),
                 cache_hit=True, latency_ms=(time.monotonic() - started) * 1000,
             )
             return {
@@ -166,6 +167,7 @@ class ChatService:
         db_service.save_message(session_id, "assistant", response_text, source)
         self._record_audit(
             session_id, source=source, figures_removed_count=len(figures_removed), model_used=model_used,
+            model_fallback=model_fallback, verification_risk=(verification or {}).get("risk"),
             degraded=degraded, latency_ms=(time.monotonic() - started) * 1000,
         )
 
