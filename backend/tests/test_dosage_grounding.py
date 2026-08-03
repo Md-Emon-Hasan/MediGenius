@@ -41,6 +41,13 @@ def test_pediatric_refusal():
     assert dosage_grounding.check_refusal("what is the right dose of paracetamol for my toddler") == "pediatric_dosing"
 
 
+def test_pediatric_refusal_age_phrasing_without_child_keyword():
+    # caught by an end-to-end benchmark run: "for my" (not just "for a") must also match
+    assert dosage_grounding.check_refusal("what dose of paracetamol for my 2 year old") == "pediatric_dosing"
+    assert dosage_grounding.check_refusal("how much for a 2-year-old") == "pediatric_dosing"
+    assert dosage_grounding.check_refusal("dosing for an 18 month old") == "pediatric_dosing"
+
+
 def test_pregnancy_refusal():
     assert dosage_grounding.check_refusal("is ibuprofen safe during pregnancy") == "pregnancy_or_breastfeeding_dosing"
 

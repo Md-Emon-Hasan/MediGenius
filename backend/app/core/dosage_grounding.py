@@ -28,7 +28,7 @@ PEDIATRIC_PATTERNS = [
     r"\b(dose|dosage|mg|medicine|medication)\b.*\b(infant|toddler|newborn|baby)\b",
     r"\bchild(ren)?\b.*\b(dose|dosage|mg|medicine|medication)\b",
     r"\b(dose|dosage|mg|medicine|medication)\b.*\bchild(ren)?\b",
-    r"for a \d+[\s-]?(year|month)[\s-]?old",
+    r"\d+[\s-]?(year|month)s?[\s-]?old\b",
 ]
 PREGNANCY_PATTERNS = [
     r"\bpregnan\w*\b.*\b(safe|dose|dosage|medication|take|drug)\b",
