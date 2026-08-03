@@ -19,3 +19,4 @@ class ChatResponse(BaseModel):
     success: bool
     disclaimer: Optional[str] = None
     safety: Optional[dict] = None
+    verification: Optional[dict] = None

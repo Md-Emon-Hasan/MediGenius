@@ -60,6 +60,7 @@ class ChatService:
                 "success": True,
                 "disclaimer": None,
                 "safety": {"blocked": True, "category": safety["category"], "refused_topic": None, "figures_removed": []},
+                "verification": None,
             }
 
         refused_topic = dosage_grounding.check_refusal(message)
@@ -77,11 +78,12 @@ class ChatService:
                 "success": True,
                 "disclaimer": safety["disclaimer"],
                 "safety": {"blocked": False, "category": None, "refused_topic": refused_topic, "figures_removed": []},
+                "verification": None,
             }
 
         cached = cache.get_answer(message)
         if cached is not None:
-            response_text, source, figures_removed, model_used, model_fallback = cached
+            response_text, source, figures_removed, model_used, model_fallback, verification = cached
             db_service.save_message(session_id, "assistant", response_text, source)
             self._record_audit(
                 session_id, source=source, figures_removed_count=len(figures_removed), model_used=model_used,
@@ -97,6 +99,7 @@ class ChatService:
                     "blocked": False, "category": None, "refused_topic": None, "figures_removed": figures_removed,
                     "model_used": model_used, "model_fallback": model_fallback,
                 },
+                "verification": verification,
             }
 
         # Initialize or retrieve conversation state
@@ -126,11 +129,12 @@ class ChatService:
 
         model_used = result.get("model_used")
         model_fallback = bool(result.get("model_fallback"))
+        verification = result.get("verification")
 
-        cache.set_answer(message, (response_text, source, figures_removed, model_used, model_fallback))
+        cache.set_answer(message, (response_text, source, figures_removed, model_used, model_fallback, verification))
 
-        # "System Message" means every real source failed and a static fallback was used instead
-        degraded = source == "System Message" or not result.get("generation")
+        # "System Message"/"Safety Router" here means the real answer failed or was held back post-verification
+        degraded = source in ("System Message", "Safety Router") or not result.get("generation")
         if model_fallback:
             logger.warning("model_gateway: answer served by fallback model %s", model_used)
 
@@ -151,6 +155,7 @@ class ChatService:
                 "blocked": False, "category": None, "refused_topic": None, "figures_removed": figures_removed,
                 "model_used": model_used, "model_fallback": model_fallback,
             },
+            "verification": verification,
         }
 
     def clear_conversation(self, session_id: str) -> None:

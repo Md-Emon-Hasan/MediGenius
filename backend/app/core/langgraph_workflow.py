@@ -5,6 +5,7 @@ LangGraph StateGraph definition, routing functions, and workflow factory.
 
 from langgraph.graph import END, StateGraph
 
+from app.agents.diagnosis_verification_sub_agent import DiagnosisVerificationSubAgent
 from app.agents.executor import ExecutorAgent
 from app.agents.explanation import ExplanationAgent
 from app.agents.llm_agent import LLMAgent
@@ -54,6 +55,7 @@ def create_workflow():
     workflow.add_node("wikipedia", WikipediaAgent)
     workflow.add_node("tavily", TavilyAgent)
     workflow.add_node("executor", ExecutorAgent)
+    workflow.add_node("diagnosis_verification", DiagnosisVerificationSubAgent)
     workflow.add_node("explanation", ExplanationAgent)
 
     # Entry point
@@ -84,6 +86,7 @@ def create_workflow():
     workflow.add_conditional_edges(
         "tavily", _route_after_tavily, {"executor": "executor"}
     )
-    workflow.add_edge("executor", END)
+    workflow.add_edge("executor", "diagnosis_verification")
+    workflow.add_edge("diagnosis_verification", END)
 
     return workflow.compile()

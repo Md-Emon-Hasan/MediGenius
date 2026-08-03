@@ -29,6 +29,7 @@ class AgentState(TypedDict):
     retry_count: int
     model_used: Optional[str]
     model_fallback: bool
+    verification: Optional[Dict]
 
 
 def initialize_conversation_state() -> AgentState:
@@ -52,6 +53,7 @@ def initialize_conversation_state() -> AgentState:
         "retry_count": 0,
         "model_used": None,
         "model_fallback": False,
+        "verification": None,
     }
 
 
@@ -76,6 +78,7 @@ def reset_query_state(state: AgentState) -> AgentState:
             "retry_count": 0,
             "model_used": None,
             "model_fallback": False,
+            "verification": None,
         }
     )
     return state
