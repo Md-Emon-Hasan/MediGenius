@@ -5,7 +5,8 @@ from app.services.database_service import db_service
 
 
 def test_get_review_queue_empty(test_client, mock_dependencies):
-    with patch.object(db_service, 'get_review_queue', return_value={"items": [], "total": 0, "page": 1, "page_size": 20}):
+    empty_page = {"items": [], "total": 0, "page": 1, "page_size": 20}
+    with patch.object(db_service, 'get_review_queue', return_value=empty_page):
         response = test_client.get("/api/v1/review")
         assert response.status_code == 200
         data = response.json()

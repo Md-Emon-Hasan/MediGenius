@@ -60,7 +60,8 @@ def test_low_risk_answer_passed_through_unchanged():
     with patch("app.agents.diagnosis_verification_sub_agent.model_gateway.is_available", return_value=True), \
          patch("app.agents.diagnosis_verification_sub_agent.model_gateway.generate") as mock_gen:
         mock_gen.return_value = {
-            "content": '{"grounded": true, "citations_valid": true, "unsupported_claims": [], "risk": "low", "needs_revision": false}',
+            "content": ('{"grounded": true, "citations_valid": true, "unsupported_claims": [], '
+                        '"risk": "low", "needs_revision": false}'),
             "model_used": "groq/openai/gpt-oss-120b", "fallback": False, "degraded": False,
         }
         res = DiagnosisVerificationSubAgent(state)
@@ -78,7 +79,8 @@ def test_high_risk_answer_is_held_back():
          patch("app.agents.diagnosis_verification_sub_agent.model_gateway.generate") as mock_gen:
         mock_gen.return_value = {
             "content": ('{"grounded": false, "citations_valid": false, '
-                        '"unsupported_claims": ["diagnosis of autoimmune disease"], "risk": "high", "needs_revision": true}'),
+                        '"unsupported_claims": ["diagnosis of autoimmune disease"], '
+                        '"risk": "high", "needs_revision": true}'),
             "model_used": "groq/openai/gpt-oss-120b", "fallback": False, "degraded": False,
         }
         res = DiagnosisVerificationSubAgent(state)

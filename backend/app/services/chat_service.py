@@ -83,7 +83,12 @@ class ChatService:
                 "timestamp": datetime.now().strftime("%I:%M %p"),
                 "success": True,
                 "disclaimer": None,
-                "safety": {"blocked": True, "category": safety["category"], "refused_topic": None, "figures_removed": []},
+                "safety": {
+                    "blocked": True,
+                    "category": safety["category"],
+                    "refused_topic": None,
+                    "figures_removed": [],
+                },
                 "verification": None,
                 "symptom_summary": None,
             }, safety
@@ -149,7 +154,9 @@ class ChatService:
         state["session_id"] = session_id
         return state
 
-    def _finalize_graph_result(self, session_id: str, message: str, started: float, result: Dict, safety: Dict) -> Dict[str, Any]:
+    def _finalize_graph_result(
+        self, session_id: str, message: str, started: float, result: Dict, safety: Dict
+    ) -> Dict[str, Any]:
         """Post-process a completed graph run into the response payload (grounding, caching, persistence, audit)."""
         self.conversation_states[session_id].update(result)
 

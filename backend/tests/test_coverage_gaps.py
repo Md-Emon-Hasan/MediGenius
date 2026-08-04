@@ -82,7 +82,10 @@ def test_llm_agent_short_response():
     state["question"] = "hi"
     with patch("app.agents.llm_agent.model_gateway.is_available", return_value=True), \
          patch("app.agents.llm_agent.model_gateway.generate") as mock_gen:
-        mock_gen.return_value = {"content": "short", "model_used": "groq/openai/gpt-oss-120b", "fallback": False, "degraded": False}
+        mock_gen.return_value = {
+            "content": "short", "model_used": "groq/openai/gpt-oss-120b",
+            "fallback": False, "degraded": False,
+        }
         res = LLMAgent(state)
         assert res["llm_success"] is False
 

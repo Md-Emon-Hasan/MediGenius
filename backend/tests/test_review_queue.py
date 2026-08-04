@@ -48,8 +48,12 @@ def test_migration_adds_missing_columns_without_dropping_data(setup_teardown_db)
     service = setup_teardown_db
     with service.engine.begin() as conn:
         conn.execute(text("DROP TABLE audit_log"))
-        conn.execute(text("CREATE TABLE audit_log (id INTEGER PRIMARY KEY, session_id VARCHAR(255), source VARCHAR(255))"))
-        conn.execute(text("INSERT INTO audit_log (session_id, source) VALUES ('pre-existing-row', 'AI Medical Knowledge')"))
+        conn.execute(text(
+            "CREATE TABLE audit_log (id INTEGER PRIMARY KEY, session_id VARCHAR(255), source VARCHAR(255))"
+        ))
+        conn.execute(text(
+            "INSERT INTO audit_log (session_id, source) VALUES ('pre-existing-row', 'AI Medical Knowledge')"
+        ))
 
     service._migrate_audit_log_columns()
 
@@ -57,7 +61,11 @@ def test_migration_adds_missing_columns_without_dropping_data(setup_teardown_db)
         columns = {row[1] for row in conn.execute(text("PRAGMA table_info(audit_log)"))}
         rows = conn.execute(text("SELECT session_id, source FROM audit_log")).fetchall()
 
-    for expected in ["model_fallback", "verification_risk", "needs_review", "review_status", "human_verdict", "reviewed_at"]:
+    expected_columns = [
+        "model_fallback", "verification_risk", "needs_review",
+        "review_status", "human_verdict", "reviewed_at",
+    ]
+    for expected in expected_columns:
         assert expected in columns
     assert rows == [("pre-existing-row", "AI Medical Knowledge")]
 

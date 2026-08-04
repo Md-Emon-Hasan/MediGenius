@@ -97,8 +97,9 @@ async def test_branch_exception_does_not_crash_others():
 
 def test_rag_sync_uses_cached_retrieval():
     mock_retriever = MagicMock()
+    cached_docs = [Document(page_content="cached " * 20)]
     with patch("app.agents.parallel_retrieval_agent.get_retriever", return_value=mock_retriever), \
-         patch("app.agents.parallel_retrieval_agent.cache.get_retrieval", return_value=[Document(page_content="cached " * 20)]), \
+         patch("app.agents.parallel_retrieval_agent.cache.get_retrieval", return_value=cached_docs), \
          patch("app.agents.parallel_retrieval_agent.cache.set_retrieval") as mock_set:
         docs, source = _rag_sync("fever")
         assert source == "Medical Literature Database"

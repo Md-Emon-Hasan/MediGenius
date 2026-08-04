@@ -19,7 +19,13 @@ HELD_BACK_ANSWER = (
     "clinician or pharmacist directly rather than relying on this answer."
 )
 
-SKIPPED_VERDICT = {"grounded": False, "citations_valid": False, "unsupported_claims": [], "risk": "high", "needs_revision": False}
+SKIPPED_VERDICT = {
+    "grounded": False,
+    "citations_valid": False,
+    "unsupported_claims": [],
+    "risk": "high",
+    "needs_revision": False,
+}
 
 
 def _build_verdict_prompt(answer: str, evidence_text: str, figures_flagged: bool) -> str:

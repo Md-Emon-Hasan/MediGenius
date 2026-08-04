@@ -14,24 +14,25 @@ jobs:
         working-directory: ./backend
 
     steps:
-    - uses: actions/checkout@v3
-    
+    - uses: actions/checkout@v4
+
     - name: Set up Python 3.10
-      uses: actions/setup-python@v3
+      uses: actions/setup-python@v5
       with:
         python-version: "3.10"
-        
+        cache: pip
+        cache-dependency-path: backend/requirements.txt
+
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-        pip install pytest httpx coverage
-    
+        pip install -r requirements.txt
+
     - name: Run Code Quality Checks
       run: |
         flake8 app tests
         isort --check-only app tests
-        
+
     - name: Run Backend Tests
       run: |
         pytest --cov=app --cov-report=term-missing tests/
@@ -43,16 +44,19 @@ jobs:
         working-directory: ./frontend
 
     steps:
-    - uses: actions/checkout@v3
-    
+    - uses: actions/checkout@v4
+
     - name: Set up Node.js
-      uses: actions/setup-node@v3
+      # 20.19+ is the floor for vite 7 / vitest 4, and matches frontend/Dockerfile
+      uses: actions/setup-node@v4
       with:
-        node-version: '18'
-        
+        node-version: '20'
+        cache: npm
+        cache-dependency-path: frontend/package-lock.json
+
     - name: Install Dependencies
-      run: npm install
-    
+      run: npm ci
+
     - name: Run Frontend Tests
       run: npx vitest run
       
@@ -65,8 +69,8 @@ jobs:
     if: github.event_name == 'push'
     
     steps:
-    - uses: actions/checkout@v3
-    
+    - uses: actions/checkout@v4
+
     - name: Build Backend Docker Image
       run: docker build ./backend -t medigenius-backend:latest
       

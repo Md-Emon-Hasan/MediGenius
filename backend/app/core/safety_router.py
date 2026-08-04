@@ -12,9 +12,21 @@ from app.core.logging_config import logger
 
 # contact details verified against official sources August 2026 — see Phase 1 report, do not edit without a source
 HELPLINES = {
-    "BD": {"crisis_name": "Kaan Pete Roi", "crisis_contact": "09612-119911 (alt +8801779-554391), 3 PM-3 AM daily", "emergency": "999"},
-    "US": {"crisis_name": "988 Suicide & Crisis Lifeline", "crisis_contact": "call or text 988, 24/7", "emergency": "911"},
-    "UK": {"crisis_name": "Samaritans", "crisis_contact": "116 123, free, 24/7", "emergency": "999 or 112"},
+    "BD": {
+        "crisis_name": "Kaan Pete Roi",
+        "crisis_contact": "09612-119911 (alt +8801779-554391), 3 PM-3 AM daily",
+        "emergency": "999",
+    },
+    "US": {
+        "crisis_name": "988 Suicide & Crisis Lifeline",
+        "crisis_contact": "call or text 988, 24/7",
+        "emergency": "911",
+    },
+    "UK": {
+        "crisis_name": "Samaritans",
+        "crisis_contact": "116 123, free, 24/7",
+        "emergency": "999 or 112",
+    },
 }
 INTERNATIONAL_DIRECTORY = "findahelpline.com"
 
@@ -26,7 +38,8 @@ def _build_crisis_response() -> str:
         "You deserve support from a real person right now, not a chatbot.\n\n"
         f"If you're in Bangladesh: call {bd['crisis_name']} at {bd['crisis_contact']}.\n"
         f"Anywhere else: {INTERNATIONAL_DIRECTORY} lists a free, confidential helpline for your country.\n"
-        f"If you are in immediate danger, please call your local emergency number right now ({bd['emergency']} in Bangladesh).\n\n"
+        "If you are in immediate danger, please call your local emergency number "
+        f"right now ({bd['emergency']} in Bangladesh).\n\n"
         "Please talk to someone — a helpline, a trusted person, or emergency services. "
         "You don't have to go through this alone."
     )
