@@ -476,13 +476,12 @@ The project includes a pre-configured CI/CD pipeline (`.github/workflows/ci-cd.y
 ## **Developed By**
 
 **Md Emon Hasan**  
-**Email:** emon.mlengineer@gmail.com
-**Portfolio:** [Md-Emon-Hasan](https://emonlabs-ai.hitechparks.com) 
+**Email:** emon.mlengineer@gmail.com  
+**Portfolio:** [Md-Emon-Hasan](https://emonlabs-ai.hitechparks.com)  
 **WhatsApp:** [+8801834363533](https://wa.me/8801834363533)  
 **GitHub:** [Md-Emon-Hasan](https://github.com/Md-Emon-Hasan)  
 **LinkedIn:** [Md Emon Hasan](https://www.linkedin.com/in/md-emon-hasan-695483237/)  
 **Facebook:** [Md Emon Hasan](https://www.facebook.com/mdemon.hasan2001/)
-
 ---
 
 ## License
