@@ -1,7 +1,8 @@
 """Edge case tests for API routes — Deep Modular Architecture"""
 from unittest.mock import patch
 
-from app.services import chat_service, db_service
+from app.services import db_service
+from app.services.chat_service import chat_service
 
 
 def test_chat_with_header_session_id(test_client, mock_dependencies):

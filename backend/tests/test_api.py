@@ -1,7 +1,8 @@
 import json
 from unittest.mock import patch
 
-from app.services import chat_service, db_service
+from app.services import db_service
+from app.services.chat_service import chat_service
 
 
 def _parse_sse(text):

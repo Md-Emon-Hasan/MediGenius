@@ -12,7 +12,8 @@ if backend_path not in sys.path:
     sys.path.insert(0, backend_path)
 
 from app.main import app  # noqa: E402
-from app.services import chat_service, db_service  # noqa: E402
+from app.services import db_service  # noqa: E402
+from app.services.chat_service import chat_service  # noqa: E402
 
 
 @pytest.fixture(scope="function")
