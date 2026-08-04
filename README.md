@@ -19,32 +19,23 @@
 
 <p align="center">
   <a href="https://react.dev/"><img src="https://img.shields.io/badge/React_19-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React"></a>
-  <a href="https://vitejs.dev/"><img src="https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white" alt="Vite"></a>
   <a href="https://tailwindcss.com/"><img src="https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="Tailwind"></a>
-  <a href="https://daisyui.com/"><img src="https://img.shields.io/badge/daisyUI-5AD7E4?style=for-the-badge&logoColor=black" alt="daisyUI"></a>
   <a href="https://www.docker.com/"><img src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker"></a>
 </p>
 
-> ### ⚠️ Not a medical device. Not a diagnosis.
-> MediGenius is an **information and triage assistant**, not a clinician. It does not diagnose conditions, and its
-> answers are not a substitute for professional medical advice, examination, or treatment. **If this is a medical
-> emergency, stop and call your local emergency number now** (999 in Bangladesh, 911 in the US, 999/112 in the UK).
-> If you are in crisis or having thoughts of suicide or self-harm, please reach out to a real person: in Bangladesh,
-> **Kaan Pete Roi** at **09612-119911** (3 PM–3 AM daily); elsewhere, **[findahelpline.com](https://findahelpline.com)**
-> lists a free, confidential helpline for your country. The system has automated detection for both situations (see
-> [Safety Architecture](#safety-architecture) below), but that detection is pattern-based and **will miss things** —
-> never rely on it as your only safeguard.
+**MediGenius** is a multi-agent medical information assistant orchestrated as a **LangGraph `StateGraph`** on top
+of **Groq**-hosted LLMs, routed through a **LiteLLM model gateway** for tiered retry/fallback. Every answer passes
+through a deterministic pre-pipeline safety gate (`safety_router`) before any model is called, and a
+post-generation verification agent (`DiagnosisVerificationSubAgent`) before it reaches the user — the safety
+layer is not a bolt-on, it's the first and last thing that runs on every request.
 
-**MediGenius** is a multi-agent medical information assistant built with **LangGraph orchestration** on top of
-**Groq**-hosted LLMs. Every answer passes through a deterministic pre-pipeline safety gate before any model is
-called, and a post-generation verification step before it reaches the user — the safety layer is not a bolt-on,
-it's the first and last thing that runs on every request.
-
-The system combines **medical RAG from a verified PDF**, **concurrent live-web retrieval** (Wikipedia + Tavily),
-and **direct LLM knowledge** as fallbacks of each other, with a **supervisor** that conditionally routes
-symptom-describing questions through a dedicated structuring step and drug-related questions through name
-recognition + pharmacist referral (never LLM recall). Long-term memory persists chat history in SQLite and adds
-session-scoped semantic recall over a separate Chroma collection.
+The system combines **medical RAG** (`ParallelRetrievalAgent`, over a verified PDF indexed in **ChromaDB** with
+HuggingFace sentence-transformer embeddings), **concurrent live-web retrieval** (Wikipedia + Tavily), and
+**direct LLM knowledge** (`LLMAgent`) as fallbacks of each other, synthesized by an `ExecutorAgent`. A
+`MedicalSupervisorAgent` conditionally routes symptom-describing questions to a `SymptomAnalysisSubAgent` for
+structuring, and drug-related questions to a `DrugInteractionSubAgent` for RxNav (NIH) name recognition +
+pharmacist referral (never LLM recall). A `MemoryAgent` persists chat history in SQLite and adds session-scoped
+semantic recall over a separate ChromaDB collection.
 
 ---
 
@@ -69,16 +60,12 @@ agent graph, not inside it — none of it is LLM-judged where a deterministic ru
 
 | Stage | What it does | LLM involved? |
 | --- | --- | --- |
-| **Safety router** (`core/safety_router.py`) | Regex/keyword detection for crisis (self-harm, suicidal ideation) and medical emergencies (chest pain, stroke signs, anaphylaxis, etc.), in English and Bengali (script + transliterated). On a match, the pipeline never runs — a fixed, hardcoded, non-generated response with verified helpline/emergency numbers is returned instead. Also strips instruction-like text from PDF/web content before it reaches a prompt, and fails closed (safe static response) on any internal error. | No — pure pattern matching |
-| **Refused topics** (`core/dosage_grounding.py`) | Paediatric dosing, pregnancy/breastfeeding dosing, and drug-interaction questions are hard-refused and referred to a pharmacist/doctor — the model never attempts an answer. The drug-interaction path additionally normalizes any recognized substance names against RxNav (NIH) so the referral can name them, but it never states whether an interaction exists (see [Limitations](#limitations) for why). | No |
-| **Dosage grounding** (`core/dosage_grounding.py`) | Every dosage/frequency/duration/age figure in a generated answer is string-matched against the retrieved sources. Anything not found gets stripped and replaced with a referral to a clinician or pharmacist. | No |
-| **Diagnosis verification** (`agents/diagnosis_verification_sub_agent.py`) | One structured LLM call checks a document-grounded answer against its evidence for unsupported claims. High risk holds the answer back entirely; medium risk with a fixable claim gets exactly one revision pass, no re-verification loop. Answers with no retrieval evidence (the ordinary direct-LLM-knowledge path) skip this — they never claimed grounding in the first place. | Yes, one call (occasionally two if a revision fires) |
-| **Disclaimer** | Every non-blocked, non-refused answer carries a `disclaimer` field in the API response: general information, not a diagnosis, consult a clinician for anything beyond general guidance. | No |
-| **Review queue** (`api/v1/endpoints/review.py`) | Answers get flagged for clinician review when a safety rule fired, a topic was refused, a dosage figure was stripped, a fallback model served the answer, or verification risk came back high. | No |
-
-**Principle behind all of it:** an LLM deciding whether a message indicates suicidal intent is an LLM that will
-sometimes decide wrong and keep talking. A false positive here costs one unnecessary helpline message. A false
-negative costs much more. Every rule above is deterministic for exactly that reason.
+| **Safety router** (`core/safety_router.py`) | Pattern-matches crisis/emergency language, returns a fixed helpline response. | No |
+| **Refused topics** (`core/dosage_grounding.py`) | Hard-refuses paediatric/pregnancy dosing and drug-interaction questions, refers to a pharmacist. | No |
+| **Dosage grounding** (`core/dosage_grounding.py`) | Strips any dosage figure not found in the retrieved sources. | No |
+| **Diagnosis verification** (`agents/diagnosis_verification_sub_agent.py`) | Checks a grounded answer against its evidence; holds back high-risk claims. | Yes, one call |
+| **Disclaimer** | Every answer carries a `disclaimer` field. | No |
+| **Review queue** (`api/v1/endpoints/review.py`) | Flags risky/refused/fallback answers for clinician review. | No |
 
 ---
 
@@ -87,26 +74,15 @@ negative costs much more. Every rule above is deterministic for exactly that rea
 Reworded from the previous version of this README, which described the system as giving "preliminary medical
 advice" — that oversold what a pattern-gated LLM pipeline can responsibly do. What it actually does:
 
-1. **Health Information & Triage** — Helping someone understand a symptom, condition, or medical term well enough
-   to know whether and how urgently to see a clinician — not replacing that visit.
-2. **Mental Health First Aid Referral** — Recognizing distress and crisis language and connecting the person to a
-   real helpline or emergency service, rather than attempting to counsel them itself.
-3. **Patient Pre-visit Preparation** — Structuring a description of symptoms (what, since when, what makes it
-   better or worse) into something a clinician can act on faster — explicitly not a diagnosis.
-4. **Medication Information (not dosing)** — General information about what a medication is typically used for.
-   Exact dosing, paediatric dosing, pregnancy/breastfeeding safety, and drug interactions are hard-refused and
-   referred to a pharmacist, by design.
-5. **Educational Assistant** — Helping students or patients understand medical topics in plainer language, sourced
-   from a curated medical reference text where available.
+1. **Health Information & Triage** — Understand a symptom or condition well enough to know how urgently to see a clinician.
+2. **Mental Health First Aid Referral** — Recognizes crisis language and connects to a real helpline, never counsels.
+3. **Patient Pre-visit Preparation** — Structures a symptom description for a clinician — not a diagnosis.
+4. **Medication Information (not dosing)** — General usage info only; dosing and interactions are hard-refused and referred to a pharmacist.
+5. **Educational Assistant** — Explains medical topics in plainer language, sourced from a curated reference text.
 
 ---
 
 ## **Measured Performance**
-
-The previous version of this README included an accuracy/alignment benchmark table (90%+ factual accuracy, 82%
-medical alignment, comparisons against LLaMA 3.1 70B). **That table has been removed** — nothing in this codebase
-measures factual accuracy or medical alignment, and repeating those figures without having verified them would be
-exactly the kind of unearned claim this document is trying to stop making.
 
 What follows instead are single-run latency measurements taken during this session's testing, against the live
 Groq API, on the deployed pipeline shape described below. This is **not** a statistical benchmark — no percentiles,
@@ -121,34 +97,20 @@ no repeated trials — just an honest snapshot of what each path currently costs
 | Casual/definitional chat (direct LLM) | **~0.7–0.8s** | One Groq call, no retrieval |
 | Medical question with RAG hit | **~7–11s** | Parallel retrieval fan-out + synthesis + one verification call (occasionally two, if a revision fires) |
 
-The RAG path is the slowest and most representative of a "real" medical question. Two things drive that number:
-Groq's per-call latency for a reasoning-tier model, and the verification step's own call — both necessary given the
-safety goals here, but real costs worth knowing about. If you re-measure this, expect variance: Groq's free tier
-rate-limits aggressively enough that a fallback-tier hop (logged and surfaced in the response) is common under any
-sustained load.
-
 ---
 
 ## **Features**
 
-* **Deterministic safety layer** — crisis/emergency detection (English + Bengali), refused-topic hard-stops,
-  dosage-figure grounding, and an unskippable disclaimer, all before/around the LLM, never decided by one
-* **Diagnosis verification** — one structured LLM call catches clinical claims the retrieved evidence doesn't
-  support, with a hard-capped single revision pass and a hold-back for high-risk answers
-* **Medical supervisor + sub-agents** — deterministic routing to a symptom-structuring sub-agent (never a
-  diagnosis) and a drug-name-recognition sub-agent (never LLM-recalled interaction claims)
-* **Parallel retrieval** — RAG (curated medical PDF), Wikipedia, and Tavily web search fanned out concurrently
-  with per-branch timeouts, instead of tried one at a time
-* **LiteLLM model gateway** — tiered Groq models (large for synthesis, small for cheap/fast calls) with same-model
-  retry on transient errors and tier-drop fallback on rate limits, always surfaced in the response and audit log
-* **Exact-match caching** — in-memory TTL cache for repeated questions and retrieval results; deliberately **no**
-  semantic cache (see [Limitations](#limitations))
-* **Rate limiting** — proxy-aware, configurable, protects Groq/Tavily quota and the DuckDuckGo IP-block threshold
-* **Audit log + clinician review queue** — every request logged (metadata only, never raw message text for
-  safety-sensitive cases), with a paginated review queue and a model-vs-human agreement rate
-* **Session memory** — SQLite-backed chat history that survives a process restart, plus session-scoped semantic
-  recall over a separate Chroma collection, capped and fully deletable alongside the rest of a session's data
-* **RAG (Retrieval-Augmented Generation)** from an indexed medical PDF using PyPDFLoader + HuggingFace Embeddings + ChromaDB
+* **Deterministic safety layer** — crisis/emergency detection, refused-topic hard-stops, dosage grounding, and an unskippable disclaimer, never LLM-decided
+* **Diagnosis verification** — one structured LLM call catches unsupported clinical claims, with a capped revision pass and a hold-back for high risk
+* **Medical supervisor + sub-agents** — deterministic routing to a symptom-structuring agent and a drug-name-recognition agent
+* **Parallel retrieval** — RAG, Wikipedia, and Tavily fanned out concurrently with per-branch timeouts
+* **LiteLLM model gateway** — tiered Groq models with retry on errors and tier-drop fallback on rate limits
+* **Exact-match caching** — in-memory TTL cache for repeated questions and retrieval results, no semantic cache
+* **Rate limiting** — proxy-aware, protects Groq/Tavily quota and the DuckDuckGo IP-block threshold
+* **Audit log + clinician review queue** — metadata-only request logging with a paginated review queue and agreement rate
+* **Session memory** — SQLite chat history plus session-scoped semantic recall over a separate Chroma collection
+* **RAG (Retrieval-Augmented Generation)** from an indexed medical PDF via PyPDFLoader + HuggingFace Embeddings + ChromaDB
 * **FastAPI backend** with **React, Tailwind CSS 4, DaisyUI 5** frontend
 * **Dockerized deployment**, **CI/CD pipeline** for automated testing and deployment
 
@@ -176,7 +138,6 @@ sustained load.
 | **CI/CD**                     | GitHub Actions (automated testing & deployment) |
 | **Environment Management**    | python-dotenv (environment variables) |
 | **Logging & Monitoring**      | Console + rotating file logging; metadata-only audit trail in SQLite |
-| **Hosting**                   | Render |
 
 ---
 
@@ -402,8 +363,6 @@ SYNTHESIS_MODEL=groq/openai/gpt-oss-120b
 REASONING_MODEL=groq/openai/gpt-oss-120b
 CLASSIFICATION_MODEL=groq/openai/gpt-oss-20b
 ```
-*(The previous version of this file listed a `DATABASE_URL` variable that the code has never actually read — the
-real variable is `CHAT_DB_PATH`, corrected above.)*
 
 ---
 
@@ -437,7 +396,6 @@ Use Docker for a production-grade containerized environment:
 # Build and start all services
 docker-compose up --build
 ```
-*Docker ensures that Python dependencies, Nginx proxying, and volume persistence for ChromaDB/SQLite are handled automatically.*
 
 ---
 
@@ -468,11 +426,6 @@ pregnancy/breastfeeding, drug interaction) are never cached under any circumstan
 ## **Testing and QA**
 
 ### **Backend Coverage**
-The backend test suite currently reaches **100% statement and branch coverage** (measured this session —
-`1206` statements, `198` branches, `217` tests). Two lines are excluded with `# pragma: no cover`: the
-`if __name__ == "__main__"` entry point in `main.py`, and one inner-loop arc in `model_gateway.generate()` that is
-structurally unreachable (every attempt path explicitly returns, breaks, or continues — the loop can never exhaust
-its range without hitting one of those).
 
 ```bash
 cd backend
@@ -508,52 +461,23 @@ The project includes a pre-configured CI/CD pipeline (`.github/workflows/ci-cd.y
 - **Code Quality**: Verifies `flake8` and `isort` compliance.
 - **Docker Build**: Validates the Docker image build process for both components.
 
-### **Cloud Deployment (Render)**
-Ready for one-click deployment via `render.yml`:
-- **Backend**: Deployed as a Web Service.
-- **Frontend**: Deployed as a Static Site.
-- **Database**: Persistent disk attached for SQLite storage.
-
 ---
 
 ## **Limitations**
 
-Stated plainly, because a safety-relevant project should say what it can't do at least as clearly as what it can:
-
-- **Crisis/emergency detection is pattern-based and will have false negatives.** It's deliberately over-inclusive
-  (a missed positive is worse than an unnecessary helpline message), but a differently-worded disclosure of crisis
-  or emergency symptoms can still slip through undetected. This is not a substitute for real crisis infrastructure.
-- **The model fallback chain covers Groq-internal model failures, not a Groq outage.** If Groq itself is down,
-  every tier fails and the system returns a degraded response — there is no other provider behind it.
-- **The system does not diagnose.** Symptom analysis produces a structured summary and a referral recommendation,
-  never a diagnosis or a ranked differential. Diagnosis verification checks whether an answer's claims match its
-  evidence — it does not independently validate medical correctness.
-- **Drug interaction coverage is name-recognition only.** NIH discontinued RxNav's actual drug-drug interaction API
-  on 2024-01-02; it has not returned. This system can confirm that two mentioned substances are recognized
-  medications and refer to a pharmacist — it never states whether an interaction exists, and no other interaction
-  data source is integrated.
-- **Review endpoints are unauthenticated.** `GET/POST /review` and `GET /stats` expose flagged health-adjacent
-  interaction data with no access control, same as the pre-existing `/history` and `/session/{id}` endpoints.
-  **Authentication is required before any of this goes near real patient data** — this is called out as blocking,
-  not optional, and is not implemented here.
-- **Verification thresholds are unvalidated heuristics.** The low/medium/high risk cutoffs in
-  `diagnosis_verification_sub_agent.py` are starting points tuned from a handful of manual test runs during this
-  session, not from outcome data. They need real usage before anyone should trust the specific boundary.
-- **No semantic caching.** Exact-match only, by design — near-identical embeddings ("is ibuprofen safe?" vs. "is
-  ibuprofen safe during pregnancy?") can have opposite correct answers, and a conservative semantic-cache exclusion
-  policy wasn't worth the risk for the exact-match cache's speed benefit already covering most repeat traffic.
-- **Bengali/English detection is not exhaustive.** Coverage exists for common phrasings in both languages
-  (including transliterated Bengali), but dialectal variation, other languages entirely, and creative phrasing can
-  all miss the pattern list.
-- **Latency figures above are single-run measurements from one test session**, not a statistical benchmark — no
-  percentiles, no repeated trials. Expect real variance, especially from Groq rate-limit fallback hops.
+- **Crisis/emergency detection is pattern-based and will have false negatives.**
+- **The system does not diagnose.**
+- **Drug interaction coverage is name-recognition only.**
+- **Verification thresholds are unvalidated heuristics.**
+- **Latency figures above are single-run measurements from one test session**
 
 ---
 
 ## **Developed By**
 
 **Md Emon Hasan**  
-**Email:** emon.mlengineer@gmail.com 
+**Email:** emon.mlengineer@gmail.com
+**Portfolio:** [Md-Emon-Hasan](https://emonlabs-ai.hitechparks.com) 
 **WhatsApp:** [+8801834363533](https://wa.me/8801834363533)  
 **GitHub:** [Md-Emon-Hasan](https://github.com/Md-Emon-Hasan)  
 **LinkedIn:** [Md Emon Hasan](https://www.linkedin.com/in/md-emon-hasan-695483237/)  

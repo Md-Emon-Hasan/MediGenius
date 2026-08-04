@@ -1,13 +1,16 @@
 """
 MediGenius — api/v1/endpoints/chat.py
-Chat-related endpoints: /chat, /clear, /new-chat.
+Chat-related endpoints: /chat, /chat/stream, /clear, /new-chat.
 """
 
+import json
 import uuid
 
 from fastapi import APIRouter, HTTPException, Request
+from fastapi.responses import StreamingResponse
 
 from app.core.config import RATE_LIMIT
+from app.core.logging_config import logger
 from app.core.rate_limit import limiter
 from app.schemas.chat import ChatRequest, ChatResponse
 from app.services.chat_service import chat_service
@@ -33,6 +36,29 @@ async def chat_endpoint(payload: ChatRequest, request: Request):
         raise HTTPException(status_code=503, detail="System not initialized")
     session_id = _get_session_id(request)
     return await chat_service.process_message(session_id, payload.message)
+
+
+@router.post("/chat/stream")
+@limiter.limit(RATE_LIMIT)
+async def chat_stream_endpoint(payload: ChatRequest, request: Request):
+    """Same as /chat, but streams a Server-Sent Event per pipeline stage before the final answer."""
+    if not chat_service.workflow_app:
+        raise HTTPException(status_code=503, detail="System not initialized")
+    session_id = _get_session_id(request)
+
+    async def event_source():
+        try:
+            async for event in chat_service.process_message_stream(session_id, payload.message):
+                yield f"data: {json.dumps(event)}\n\n"
+        except Exception:
+            logger.error("chat_stream: pipeline failed mid-stream", exc_info=True)
+            yield f"data: {json.dumps({'type': 'error', 'message': 'Something went wrong. Please try again.'})}\n\n"
+
+    return StreamingResponse(
+        event_source(),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
 
 
 @router.post("/clear")

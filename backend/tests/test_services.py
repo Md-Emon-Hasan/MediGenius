@@ -265,6 +265,86 @@ class TestChatService:
         service = ChatService()
         service.clear_conversation("nonexistent")  # Should not raise
 
+    @pytest.mark.asyncio
+    async def test_process_message_stream_no_workflow(self):
+        service = ChatService()
+        with pytest.raises(ValueError, match="Workflow not initialized"):
+            async for _ in service.process_message_stream("test-session", "Hello"):
+                pass
+
+    @pytest.mark.asyncio
+    async def test_process_message_stream_crisis_bypasses_workflow(self):
+        service = ChatService()
+        service.workflow_app = MagicMock()
+        from app.services import db_service
+        with patch.object(db_service, 'save_message'):
+            events = [e async for e in service.process_message_stream("test-session", "I want to kill myself")]
+            assert events[0] == {"type": "stage", "stage": "safety_router", "label": "Checking safety filters"}
+            assert events[-1]["type"] == "final"
+            assert events[-1]["payload"]["safety"]["blocked"] is True
+
+    @pytest.mark.asyncio
+    async def test_process_message_stream_emits_node_stages_then_final(self):
+        service = ChatService()
+        service.workflow_app = MagicMock()
+
+        async def fake_astream(state, stream_mode=None):
+            yield {"supervisor": {"needs_symptom_analysis": False}}
+            yield {"executor": {"generation": "Streamed response", "source": "Test Source"}}
+
+        service.workflow_app.astream = fake_astream
+        from app.services import db_service
+        with patch.object(db_service, 'save_message'):
+            events = [e async for e in service.process_message_stream("test-session", "what is diabetes")]
+
+        stages = [e["stage"] for e in events if e["type"] == "stage"]
+        assert "safety_router" in stages
+        assert "supervisor" in stages
+        assert "executor" in stages
+        final = events[-1]
+        assert final["type"] == "final"
+        assert final["payload"]["response"] == "Streamed response"
+
+    @pytest.mark.asyncio
+    async def test_process_message_stream_falls_back_to_sync_invoke(self):
+        service = ChatService()
+        service.workflow_app = MagicMock()
+
+        def raise_attribute_error(*args, **kwargs):
+            raise AttributeError("no astream")
+
+        service.workflow_app.astream = raise_attribute_error
+        service.workflow_app.invoke = MagicMock(return_value={"generation": "Sync response", "source": "Sync Source"})
+        from app.services import db_service
+        with patch.object(db_service, 'save_message'):
+            events = [e async for e in service.process_message_stream("test-session", "Hello")]
+
+        final = events[-1]
+        assert final["payload"]["response"] == "Sync response"
+
+    @pytest.mark.asyncio
+    async def test_process_message_matches_stream_final_payload(self):
+        """process_message must still return exactly what process_message_stream's final event carries."""
+        service = ChatService()
+        service.workflow_app = MagicMock()
+        service.workflow_app.ainvoke = AsyncMock(return_value={"generation": "Test response", "source": "Test Source"})
+        from app.services import db_service
+        with patch.object(db_service, 'save_message'):
+            result = await service.process_message("test-session", "what is diabetes")
+
+        service2 = ChatService()
+        service2.workflow_app = MagicMock()
+
+        async def fake_astream(state, stream_mode=None):
+            yield {"executor": {"generation": "Test response", "source": "Test Source"}}
+
+        service2.workflow_app.astream = fake_astream
+        with patch.object(db_service, 'save_message'):
+            events = [e async for e in service2.process_message_stream("test-session-2", "what is diabetes")]
+
+        assert events[-1]["payload"]["response"] == result["response"]
+        assert events[-1]["payload"]["source"] == result["source"]
+
 
 class TestDatabaseService:
     """Tests for DatabaseService"""

@@ -2,6 +2,26 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import App from './App';
 
+// Builds a fake ReadableStream-like body emitting one chunk per SSE event, matching
+// the framing /chat/stream sends ("data: {...}\n\n").
+function makeSseBody(events) {
+    const encoder = new TextEncoder();
+    const chunks = events.map((e) => encoder.encode(`data: ${JSON.stringify(e)}\n\n`));
+    let i = 0;
+    return {
+        getReader: () => ({
+            read: () => {
+                if (i < chunks.length) {
+                    const value = chunks[i];
+                    i += 1;
+                    return Promise.resolve({ done: false, value });
+                }
+                return Promise.resolve({ done: true, value: undefined });
+            },
+        }),
+    };
+}
+
 describe('App Integration', () => {
     // Mock fetch
     const mockFetch = vi.fn();
@@ -48,16 +68,22 @@ describe('App Integration', () => {
 
     it('sends a message and displays response', async () => {
         // Setup mocks
-        mockFetch.mockImplementation((url, options) => {
-            if (url === '/api/v1/chat') {
+        mockFetch.mockImplementation((url) => {
+            if (url === '/api/v1/chat/stream') {
                 return Promise.resolve({
-                    json: () => Promise.resolve({
-                        success: true,
-                        response: 'I can help with that.',
-                        source: 'test-source',
-                        timestamp: 'now'
-                    }),
-                    ok: true
+                    ok: true,
+                    body: makeSseBody([
+                        { type: 'stage', stage: 'supervisor', label: 'Understanding your question' },
+                        {
+                            type: 'final',
+                            payload: {
+                                success: true,
+                                response: 'I can help with that.',
+                                source: 'test-source',
+                                timestamp: 'now',
+                            },
+                        },
+                    ]),
                 });
             }
             return Promise.resolve({ json: () => Promise.resolve({ success: true, sessions: [] }), ok: true });

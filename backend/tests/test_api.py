@@ -1,6 +1,16 @@
+import json
 from unittest.mock import patch
 
 from app.services import chat_service, db_service
+
+
+def _parse_sse(text):
+    events = []
+    for block in text.strip().split("\n\n"):
+        for line in block.splitlines():
+            if line.startswith("data: "):
+                events.append(json.loads(line[len("data: "):]))
+    return events
 
 
 def test_health_check(test_client):
@@ -51,6 +61,52 @@ def test_chat_flow_success(test_client, mock_dependencies):
     assert data["success"] is True
     assert data["response"] == "Test connection successful"
     assert data["source"] == "Mock Brain"
+
+
+def test_chat_stream_flow_success(test_client, mock_dependencies):
+    response = test_client.post("/api/v1/new-chat")
+    session_id = response.json()["session_id"]
+
+    with patch("app.services.chat_service.memory_store.add_exchange"):
+        stream_response = test_client.post(
+            "/api/v1/chat/stream",
+            json={"message": "Hello AI"},
+            headers={"X-Session-ID": session_id},
+        )
+
+    assert stream_response.status_code == 200
+    events = _parse_sse(stream_response.text)
+    assert len(events) >= 2
+    assert events[0]["type"] == "stage"
+    final_events = [e for e in events if e["type"] == "final"]
+    assert len(final_events) == 1
+    assert final_events[0]["payload"]["response"] == "Test response from AI"
+
+
+def test_chat_stream_mid_stream_failure_yields_error_event(test_client, mock_dependencies):
+    async def failing_stream(session_id, message):
+        yield {"type": "stage", "stage": "supervisor", "label": "Understanding your question"}
+        raise RuntimeError("boom")
+
+    with patch.object(chat_service, 'process_message_stream', failing_stream):
+        response = test_client.post(
+            "/api/v1/chat/stream",
+            json={"message": "Hello AI"},
+        )
+
+    assert response.status_code == 200
+    events = _parse_sse(response.text)
+    assert events[0]["type"] == "stage"
+    assert events[-1]["type"] == "error"
+
+
+def test_chat_stream_system_not_initialized(test_client):
+    with patch.object(chat_service, 'workflow_app', None):
+        response = test_client.post(
+            "/api/v1/chat/stream",
+            json={"message": "Hello"},
+        )
+        assert response.status_code == 503
 
 
 def test_chat_flow_system_not_initialized(test_client):

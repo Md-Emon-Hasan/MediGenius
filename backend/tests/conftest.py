@@ -38,6 +38,15 @@ def mock_dependencies():
         "llm_success": True
     }
 
+    async def _default_astream(state, stream_mode=None):
+        yield {"executor": {
+            "generation": "Test response from AI",
+            "source": "Test Source",
+            "llm_success": True,
+        }}
+
+    mock_app_instance.astream = _default_astream
+
     # 2. Patch using patch.object on the imported singletons
     with patch.object(db_service, 'init_db') as mock_db, \
          patch.object(chat_service, 'initialize_workflow'), \

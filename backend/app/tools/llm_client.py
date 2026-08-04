@@ -20,9 +20,9 @@ def get_llm():
 
         _llm_instance = ChatGroq(
             api_key=GROQ_API_KEY,
-            model_name="llama-3.3-70b-versatile",
+            model_name="openai/gpt-oss-120b",
             temperature=0.3,
             max_tokens=2048,
         )
-        logger.info("LLM client initialized (Groq / llama-3.3-70b-versatile)")
+        logger.info("LLM client initialized (Groq / openai/gpt-oss-120b)")
     return _llm_instance

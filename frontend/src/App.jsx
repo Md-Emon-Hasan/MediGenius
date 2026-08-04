@@ -36,6 +36,19 @@ function formatTimeAgo(timestamp) {
   return past.toLocaleDateString();
 }
 
+// Backend history returns full ISO timestamps (e.g. "2026-08-03T14:34:34.719902"); live
+// responses already arrive as a short "02:34 PM" string — only reformat the former.
+const ISO_TIMESTAMP_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/;
+
+function formatChatTime(timestamp) {
+  if (!timestamp) return '';
+  if (!ISO_TIMESTAMP_RE.test(timestamp)) return timestamp;
+  const normalized = timestamp.replace(/(\.\d{3})\d+$/, '$1');
+  const parsed = new Date(normalized);
+  if (Number.isNaN(parsed.getTime())) return timestamp;
+  return parsed.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
 function buildDownloadText(chatHistory) {
   let content = 'MediGenius Chat Export\n';
   content += '='.repeat(50) + '\n\n';
@@ -164,7 +177,7 @@ const QUICK_QUESTIONS = [
   { icon: 'fa-pills', label: 'Cold Remedies', q: 'Common cold remedies' },
 ];
 
-function ChatArea({ messages, isTyping, showWelcome, onQuickQuestion, chatAreaRef }) {
+function ChatArea({ messages, isTyping, thinkingStages, showWelcome, onQuickQuestion, chatAreaRef }) {
   return (
     <div className="chat-area" ref={chatAreaRef}>
 
@@ -213,14 +226,28 @@ function ChatArea({ messages, isTyping, showWelcome, onQuickQuestion, chatAreaRe
 
       {/* Typing Indicator */}
       <div className={`typing-indicator${isTyping ? ' active' : ''}`}>
-        <div className="typing-bubble glass-effect">
+        <div className={`typing-bubble glass-effect${thinkingStages.length ? ' steps' : ''}`}>
           <div className="typing-content">
-            <span className="typing-text">MediGenius is thinking</span>
-            <div className="typing-dots">
-              <span className="dot" />
-              <span className="dot" />
-              <span className="dot" />
-            </div>
+            {thinkingStages.length === 0 ? (
+              <>
+                <span className="typing-text">MediGenius is thinking</span>
+                <div className="typing-dots">
+                  <span className="dot" />
+                  <span className="dot" />
+                  <span className="dot" />
+                </div>
+              </>
+            ) : (
+              thinkingStages.map((step, idx) => {
+                const isCurrent = idx === thinkingStages.length - 1;
+                return (
+                  <div key={step.stage} className={`thinking-step${isCurrent ? ' current' : ' done'}`}>
+                    <i className={`fas ${isCurrent ? 'fa-circle-notch fa-spin' : 'fa-check'}`} />
+                    <span>{step.label}</span>
+                  </div>
+                );
+              })
+            )}
           </div>
         </div>
       </div>
@@ -242,7 +269,7 @@ function MessageBubble({ msg }) {
           <div className="message-content">
             <div className="message-text">
               {msg.content}
-              <span className="message-time">{msg.timestamp}</span>
+              <span className="message-time">{formatChatTime(msg.timestamp)}</span>
             </div>
           </div>
         </div>
@@ -258,7 +285,7 @@ function MessageBubble({ msg }) {
           <div className="message-text">
             <ReactMarkdown>{msg.content}</ReactMarkdown>
           </div>
-          <span className="message-time">{msg.timestamp}</span>
+          <span className="message-time">{formatChatTime(msg.timestamp)}</span>
           <div className="message-footer">
             {msg.source && (
               <span className="message-source">
@@ -364,6 +391,7 @@ export default function App() {
   const [chatHistory, setChatHistory] = useState([]);       // for download
   const [showWelcome, setShowWelcome] = useState(true);
   const [isTyping, setIsTyping] = useState(false);
+  const [thinkingStages, setThinkingStages] = useState([]);
   const [inputValue, setInputValue] = useState('');
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
 
@@ -403,7 +431,7 @@ export default function App() {
     }
   }, []);
 
-  useEffect(() => { scrollToBottom(); }, [messages, isTyping, scrollToBottom]);
+  useEffect(() => { scrollToBottom(); }, [messages, isTyping, thinkingStages, scrollToBottom]);
 
   // ── Load sessions ──────────────────────────────────────────
   const loadSessions = useCallback(async () => {
@@ -524,6 +552,28 @@ export default function App() {
     showToast('Chat downloaded successfully', 'success');
   }, [chatHistory, showToast]);
 
+  // ── Consume a text/event-stream response body, calling onEvent per parsed event ──
+  const readSseStream = useCallback(async (body, onEvent) => {
+    const reader = body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      let sepIndex = buffer.indexOf('\n\n');
+      while (sepIndex !== -1) {
+        const block = buffer.slice(0, sepIndex);
+        buffer = buffer.slice(sepIndex + 2);
+        const dataLine = block.split('\n').find((l) => l.startsWith('data: '));
+        if (dataLine) {
+          try { onEvent(JSON.parse(dataLine.slice(6))); } catch { /* ignore a malformed frame */ }
+        }
+        sepIndex = buffer.indexOf('\n\n');
+      }
+    }
+  }, []);
+
   // ── Send message ───────────────────────────────────────────
   const sendMessage = useCallback(async (overrideText) => {
     const message = (overrideText ?? inputValue).trim();
@@ -537,28 +587,47 @@ export default function App() {
     setInputValue('');
     if (inputRef.current) { inputRef.current.style.height = 'auto'; }
     setIsTyping(true);
+    setThinkingStages([]);
+
+    let finalPayload = null;
+    let streamErrorMessage = null;
 
     try {
-      const res = await fetch(`${API_BASE}/chat`, {
+      const res = await fetch(`${API_BASE}/chat/stream`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message }),
       });
-      const data = await res.json();
+      if (!res.ok || !res.body) throw new Error('stream request failed');
 
-      if (data.success) {
+      await readSseStream(res.body, (event) => {
+        if (event.type === 'stage') {
+          setThinkingStages(prev => (prev.some(s => s.stage === event.stage) ? prev : [...prev, event]));
+        } else if (event.type === 'final') {
+          finalPayload = event.payload;
+        } else if (event.type === 'error') {
+          streamErrorMessage = event.message;
+        }
+      });
+
+      if (finalPayload) {
         const botMsg = {
           type: 'assistant',
-          content: data.response,
-          timestamp: data.timestamp || time,
-          source: data.source || null,
+          content: finalPayload.response,
+          timestamp: finalPayload.timestamp || time,
+          source: finalPayload.source || null,
         };
         setMessages(prev => [...prev, botMsg]);
         setChatHistory(prev => [...prev, botMsg]);
         showToast('Response received', 'success');
         await loadSessions();
       } else {
-        const errMsg = { type: 'assistant', content: 'Sorry, I encountered an error. Please try again.', timestamp: time, source: null };
+        const errMsg = {
+          type: 'assistant',
+          content: streamErrorMessage || 'Sorry, I encountered an error. Please try again.',
+          timestamp: time,
+          source: null,
+        };
         setMessages(prev => [...prev, errMsg]);
         showToast('Error occurred', 'error');
       }
@@ -568,8 +637,9 @@ export default function App() {
       showToast('Connection error', 'error');
     } finally {
       setIsTyping(false);
+      setThinkingStages([]);
     }
-  }, [inputValue, isTyping, loadSessions, showToast]);
+  }, [inputValue, isTyping, loadSessions, showToast, readSseStream]);
 
   // Quick question handler
   const handleQuickQuestion = useCallback((q) => {
@@ -656,6 +726,7 @@ export default function App() {
           <ChatArea
             messages={messages}
             isTyping={isTyping}
+            thinkingStages={thinkingStages}
             showWelcome={showWelcome}
             onQuickQuestion={handleQuickQuestion}
             chatAreaRef={chatAreaRef}

@@ -15,6 +15,23 @@ from app.core.state import initialize_conversation_state, reset_query_state
 from app.services.database_service import db_service
 from app.tools import memory_store
 
+# node name -> human-readable label, shown to the user while that node is executing
+STAGE_LABELS = {
+    "safety_router": "Checking safety filters",
+    "memory": "Recalling conversation context",
+    "supervisor": "Understanding your question",
+    "symptom_analysis": "Analyzing reported symptoms",
+    "planner": "Deciding how to answer",
+    "parallel_retrieval": "Searching medical knowledge base and web",
+    "llm_agent": "Consulting medical knowledge",
+    "executor": "Generating response",
+    "diagnosis_verification": "Verifying answer accuracy",
+}
+
+
+def _stage_event(key: str) -> Dict[str, str]:
+    return {"type": "stage", "stage": key, "label": STAGE_LABELS.get(key, key)}
+
 
 class ChatService:
     """Orchestrates the agentic workflow for each chat message."""
@@ -47,16 +64,12 @@ class ChatService:
             return []
         return [{"role": m["role"], "content": m["content"], "source": m.get("source")} for m in history[-20:]]
 
-    async def process_message(self, session_id: str, message: str) -> Dict[str, Any]:
-        """Run the agentic pipeline for a single user message."""
-        logger.info("Processing message for session %s...", session_id[:8])
+    def _try_quick_response(self, session_id: str, message: str, started: float):
+        """Handle safety block / refusal / cache hit without touching the graph.
 
-        if not self.workflow_app:
-            raise ValueError("Workflow not initialized")
-
-        started = time.monotonic()
-        db_service.save_message(session_id, "user", message)
-
+        Returns (payload, safety) if answered here, or (None, safety) if the full
+        pipeline still needs to run.
+        """
         safety = safety_router.evaluate(message)
         if safety["blocked"]:
             db_service.save_message(session_id, "assistant", safety["response"], "Safety Router")
@@ -73,7 +86,7 @@ class ChatService:
                 "safety": {"blocked": True, "category": safety["category"], "refused_topic": None, "figures_removed": []},
                 "verification": None,
                 "symptom_summary": None,
-            }
+            }, safety
 
         refused_topic = dosage_grounding.check_refusal(message)
         if refused_topic:
@@ -96,7 +109,7 @@ class ChatService:
                 "safety": {"blocked": False, "category": None, "refused_topic": refused_topic, "figures_removed": []},
                 "verification": None,
                 "symptom_summary": None,
-            }
+            }, safety
 
         cached = cache.get_answer(message)
         if cached is not None:
@@ -119,9 +132,12 @@ class ChatService:
                 },
                 "verification": verification,
                 "symptom_summary": None,
-            }
+            }, safety
 
-        # Initialize or retrieve conversation state — rehydrate from SQLite on a cold start
+        return None, safety
+
+    def _init_query_state(self, session_id: str, message: str) -> Dict:
+        """Initialize or retrieve conversation state — rehydrate from SQLite on a cold start."""
         if session_id not in self.conversation_states:
             state = initialize_conversation_state()
             state["conversation_history"] = self._rehydrate_history(session_id)
@@ -131,14 +147,10 @@ class ChatService:
         state = reset_query_state(state)
         state["question"] = message
         state["session_id"] = session_id
+        return state
 
-        # Run workflow (async preferred, sync fallback)
-        try:
-            result = await self.workflow_app.ainvoke(state)
-        except AttributeError:
-            logger.warning("Falling back to sync invoke")
-            result = self.workflow_app.invoke(state)
-
+    def _finalize_graph_result(self, session_id: str, message: str, started: float, result: Dict, safety: Dict) -> Dict[str, Any]:
+        """Post-process a completed graph run into the response payload (grounding, caching, persistence, audit)."""
         self.conversation_states[session_id].update(result)
 
         response_text = result.get("generation", "Unable to generate response.")
@@ -184,6 +196,68 @@ class ChatService:
             "verification": verification,
             "symptom_summary": result.get("symptom_summary"),
         }
+
+    async def process_message(self, session_id: str, message: str) -> Dict[str, Any]:
+        """Run the agentic pipeline for a single user message."""
+        logger.info("Processing message for session %s...", session_id[:8])
+
+        if not self.workflow_app:
+            raise ValueError("Workflow not initialized")
+
+        started = time.monotonic()
+        db_service.save_message(session_id, "user", message)
+
+        payload, safety = self._try_quick_response(session_id, message, started)
+        if payload is not None:
+            return payload
+
+        state = self._init_query_state(session_id, message)
+
+        # Run workflow (async preferred, sync fallback)
+        try:
+            result = await self.workflow_app.ainvoke(state)
+        except AttributeError:
+            logger.warning("Falling back to sync invoke")
+            result = self.workflow_app.invoke(state)
+
+        return self._finalize_graph_result(session_id, message, started, result, safety)
+
+    async def process_message_stream(self, session_id: str, message: str):
+        """Same pipeline as process_message, but yields a stage event per executed node.
+
+        Yields {"type": "stage", "stage": ..., "label": ...} as each node completes, then
+        exactly one {"type": "final", "payload": {...}} with the same payload process_message
+        would have returned.
+        """
+        logger.info("Processing message for session %s (streaming)...", session_id[:8])
+
+        if not self.workflow_app:
+            raise ValueError("Workflow not initialized")
+
+        started = time.monotonic()
+        db_service.save_message(session_id, "user", message)
+
+        yield _stage_event("safety_router")
+        payload, safety = self._try_quick_response(session_id, message, started)
+        if payload is not None:
+            yield {"type": "final", "payload": payload}
+            return
+
+        state = self._init_query_state(session_id, message)
+
+        merged = dict(state)
+        try:
+            async for update in self.workflow_app.astream(state, stream_mode="updates"):
+                for node_name, delta in update.items():
+                    merged.update(delta)
+                    yield _stage_event(node_name)
+        except (AttributeError, TypeError):
+            logger.warning("Falling back to sync invoke (no astream support)")
+            merged.update(self.workflow_app.invoke(state))
+            yield _stage_event("executor")
+
+        payload = self._finalize_graph_result(session_id, message, started, merged, safety)
+        yield {"type": "final", "payload": payload}
 
     def clear_conversation(self, session_id: str) -> None:
         """Reset the in-memory conversation state for a session."""
