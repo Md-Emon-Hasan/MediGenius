@@ -23,8 +23,14 @@
   <a href="https://www.docker.com/"><img src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker"></a>
 </p>
 
-**MediGenius** is a multi-agent medical information assistant orchestrated as a **LangGraph `StateGraph`** on top
-of **Groq**-hosted LLMs, routed through a **LiteLLM model gateway** for tiered retry/fallback. Every answer passes
+**MediGenius** helps people understand symptoms, medications, and health questions in plain language — and just as
+importantly, it knows when *not* to answer, steering users to a real doctor, pharmacist, or crisis helpline instead
+of guessing. It's built for the reality that a wrong medical answer is worse than no answer, so safety checks run
+on every single response, not just the risky-looking ones.
+
+Under the hood, **MediGenius** is a multi-agent medical information assistant orchestrated as a **LangGraph
+`StateGraph`** on top of **Groq**-hosted LLMs, routed through a **LiteLLM model gateway** for tiered retry/fallback.
+Every answer passes
 through a deterministic pre-pipeline safety gate (`safety_router`) before any model is called, and a
 post-generation verification agent (`DiagnosisVerificationSubAgent`) before it reaches the user — the safety
 layer is not a bolt-on, it's the first and last thing that runs on every request.
